@@ -1,34 +1,54 @@
 # Tribal Wars Bunker Planner
 
-Static GitHub Pages tool for planning defensive support in Tribal Wars.
+Tool statico per GitHub Pages per pianificare bunker difensivi in Tribal Wars.
 
-## Features
+## Funzioni
 
-- Insert bunker target villages.
-- Set a default target defense quantity and default arrival time.
-- Override quantity and arrival time per bunker line, for example `462|559 10000 22:00:00`.
-- Keep enemy villages in a static section inside `app.js` with `STATIC_ENEMY_VILLAGES`.
-- Paste a Tribal Wars troop export with `Coords, Player, spear, sword, heavy` columns.
-- Sort friendly villages by distance from the nearest enemy, farthest first.
-- Allocate spear, sword, and heavy cavalry. Heavy cavalry counts as 4.
-- Optional minimum command weight, default 1000.
-- Optional one-player mode.
-- Calculate departure time from the wanted arrival time.
-- Set world speed and unit speed modifier.
-- Copy and load settings for sharing with another player. Static enemies are not overwritten by imports.
-- Copy the final plan.
+- Inserimento dei bunker con quantità e data/ora di arrivo.
+- Default globale per quantità e arrivo.
+- Lista nemici statica in `app.js`, sezione `STATIC_ENEMY_VILLAGES`.
+- Incolla export truppe Tribal Wars con colonne `Coords`, `Player`, `spear`, `sword`, `heavy`.
+- Priorità sender per ogni bunker:
+  1. più lontano dal nemico più vicino
+  2. più peso difensivo disponibile
+  3. più vicino al bunker
+- Peso difensivo: `spear + sword + heavy * 4`.
+- Flag per comando minimo, default 1000 peso difesa.
+- Il comando finale sotto soglia viene ammesso quando serve a chiudere il bunker.
+- Limite variabile di sender per bunker, default 20, usa 0 per nessun limite.
+- Output ordinabile per player o per unità.
+- Partenza separata per spear, sword e heavy.
+- Tempi arrotondati al secondo, senza millisecondi.
+- Warnings per truppe insufficienti, sender sotto soglia, limite sender e configurazioni non valide.
+- Copia e carica setup condiviso. I nemici statici non vengono sovrascritti.
 
-## GitHub Pages
+## Velocità base
 
-1. Create a repository.
-2. Upload `index.html`, `styles.css`, and `app.js` to the repository root.
-3. Go to Settings, Pages.
-4. Select Deploy from branch.
-5. Select `main` and `/root`.
+```text
+spear = 18 min/campo
+sword = 22 min/campo
+heavy = 11 min/campo
+```
 
-## Static enemies
+Formula:
 
-Edit this block in `app.js`:
+```text
+tempo_viaggio = distanza * velocità_base / velocità_mondo / modificatore_unità
+```
+
+## Formato bunker
+
+```text
+462|559 10000 2026-06-25 22:00:00
+482|548 15000 2026-06-25 22:15:00
+485|551
+```
+
+Se quantità o data/ora mancano, il tool usa i valori default.
+
+## Nemici statici
+
+Modifica in `app.js`:
 
 ```js
 const STATIC_ENEMY_VILLAGES = [
@@ -37,19 +57,16 @@ const STATIC_ENEMY_VILLAGES = [
 ];
 ```
 
-## Bunker input examples
+## GitHub Pages
+
+1. Carica `index.html`, `styles.css`, `app.js` e `.nojekyll` nella root del repository.
+2. Vai in Settings, Pages.
+3. Seleziona Deploy from a branch.
+4. Seleziona branch `main`.
+5. Seleziona folder `/ (root)`.
+
+URL atteso:
 
 ```text
-462|559 10000 22:00:00
-482|548 15000 22:15:00
-485|551
-```
-
-If quantity or arrival time is missing, the default values are used.
-
-## Troop input example
-
-```csv
-Coords,Player,spear,sword,axe,spy,light,heavy,ram,catapult,knight,snob,militia,
-462|559,zambo700,2366,67,0,465,0,0,0,50,0,0,0,
+https://amicodimega.github.io/bunker-tool/
 ```

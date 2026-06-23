@@ -172,3 +172,18 @@ dialog{
   .hero,.resultHeader{display:block}
   .heroActions,.actions{margin-top:14px}
 }
+
+.warnings{
+  border:1px solid #fedf89;
+  background:#fffaeb;
+  color:#93370d;
+  border-radius:12px;
+  padding:10px 12px;
+  margin-bottom:12px;
+  font-weight:700;
+}
+.warnings ul{
+  margin:0;
+  padding-left:18px;
+}
+.warnings:empty{display:none}
