@@ -201,3 +201,44 @@ dialog{
   padding-left:18px;
 }
 .warnings:empty{display:none}
+.tableWrap{
+  overflow-x:auto;
+  margin-top:14px;
+}
+.bunkerTable{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+.bunkerTable th,
+.bunkerTable td{
+  border-bottom:1px solid var(--border);
+  padding:8px;
+  text-align:left;
+  vertical-align:middle;
+}
+.bunkerTable th{
+  color:var(--muted);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.tableInput{
+  width:100%;
+  min-width:150px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:8px 9px;
+  background:#fbfdff;
+  color:#101828;
+  font:14px/1.35 inherit;
+}
+.compactInputs{
+  grid-template-columns:repeat(2,120px);
+}
+.worldCard{
+  align-self:start;
+}
+@media (max-width:780px){
+  .compactInputs{grid-template-columns:1fr 1fr}
+}
