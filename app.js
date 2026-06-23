@@ -1,4 +1,3 @@
-const STORAGE_KEY = "tw-bunker-planner-settings-v7";
 const COORD_RE = /\b(\d{1,3})\|(\d{1,3})\b/g;
 
 const STATIC_ENEMY_VILLAGES = [
@@ -269,7 +268,6 @@ function getActiveBunkers(){
 }
 
 function persist(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(getSettings()));
 }
 
 function renderBunkerTable(){
@@ -563,19 +561,14 @@ function decodeSettings(text){
 }
 
 function loadSaved(){
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if(saved){
-    setSettings(JSON.parse(saved));
-  }else{
-    setSettings({
-      worldSpeed: 1,
-      unitSpeed: 1,
-      minPacketEnabled: true,
-      minPacketWeight: 1000,
-      minPacketRoundingEnabled: true,
-      outputSort: "player"
-    });
-  }
+  setSettings({
+    worldSpeed: 1,
+    unitSpeed: 1,
+    minPacketEnabled: true,
+    minPacketWeight: 1000,
+    minPacketRoundingEnabled: true,
+    outputSort: "player"
+  });
 }
 
 function bind(){
@@ -631,7 +624,6 @@ function bind(){
     }
   });
   document.getElementById("clearBtn").addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY);
     bunkerRows = [];
     setSettings({
       worldSpeed: 1,
