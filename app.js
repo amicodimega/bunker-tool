@@ -1,4 +1,4 @@
-const STORAGE_KEY = "tw-bunker-planner-settings-v4";
+const STORAGE_KEY = "tw-bunker-planner-settings-v5";
 const COORD_RE = /\b(\d{1,3})\|(\d{1,3})\b/g;
 
 // Static enemy list. Edit this block when enemy villages change.
@@ -80,10 +80,6 @@ function pad2(value){
   return String(value).padStart(2,"0");
 }
 
-function pad3(value){
-  return String(value).padStart(3,"0");
-}
-
 function toLocalInputValue(date){
   return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
 }
@@ -106,7 +102,7 @@ function parseDateTime(value){
   const text = String(value || "").trim();
   if(!text) return null;
 
-  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/);
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?$/);
   if(!match) return null;
 
   const year = Number(match[1]);
@@ -115,10 +111,9 @@ function parseDateTime(value){
   const hour = Number(match[4]);
   const minute = Number(match[5]);
   const second = Number(match[6] || 0);
-  const millisecond = Number(String(match[7] || "0").padEnd(3,"0"));
   if(hour > 23 || minute > 59 || second > 59) return null;
 
-  const date = new Date(year, month, day, hour, minute, second, millisecond);
+  const date = new Date(year, month, day, hour, minute, second, 0);
   if(date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) return null;
   return date;
 }
@@ -402,6 +397,7 @@ function buildPlan(){
   const enemies = parseCoords(STATIC_ENEMY_VILLAGES.join("\n"));
   const bunkers = parseBunkers(settings.bunkerVillages, settings.targetDefense, defaultArrivalText);
   const minPacket = settings.minPacketEnabled ? Math.round(settings.minPacketWeight) : 1;
+  const minPacketThreshold = settings.minPacketEnabled ? Math.floor(minPacket * 0.9) : 1;
   const maxSenderPerBunker = Number.isFinite(settings.maxSenderPerBunker) ? Math.floor(settings.maxSenderPerBunker) : 0;
   let sources = parseTroops(settings.troopCsv);
 
@@ -420,16 +416,6 @@ function buildPlan(){
   let skippedSmallSources = 0;
   let smallFinalCommands = 0;
 
-  lines.push(`[b]Bunker plan[/b]`);
-  lines.push(`World speed: ${settings.worldSpeed}`);
-  lines.push(`Unit speed modifier: ${settings.unitSpeed}`);
-  lines.push(`Unit base speeds: spear 18 min/field, sword 22 min/field, heavy 11 min/field`);
-  lines.push(`Rules: ${settings.minPacketEnabled ? `minimum command ${minPacket} when possible` : "no minimum command"}`);
-  lines.push(`Max sender per bunker: ${maxSenderPerBunker > 0 ? maxSenderPerBunker : "nessun limite"}`);
-  lines.push(`Output: ${settings.outputSort === "unit" ? "per unità" : "per player"}`);
-  lines.push(`Static enemies: ${STATIC_ENEMY_VILLAGES.join(", ")}`);
-  lines.push("");
-
   for(const bunker of bunkers){
     let remaining = Math.round(bunker.target);
     let sentHere = 0;
@@ -444,32 +430,27 @@ function buildPlan(){
     const sortedSources = sortSourcesForBunker(sources,bunker);
     const limitedSources = maxSenderPerBunker > 0 ? sortedSources.slice(0, maxSenderPerBunker) : sortedSources;
 
-    if(maxSenderPerBunker > 0){
-      lines.push(`Sender considerati: primi ${limitedSources.length} su ${sortedSources.length} secondo multicriterio`);
-      lines.push("");
-    }
-
     for(const source of limitedSources){
       if(remaining <= 0) break;
       if(source.coord === bunker.coord || source.weight <= 0) continue;
 
-      if(settings.minPacketEnabled && source.weight < minPacket && remaining >= minPacket){
+      if(settings.minPacketEnabled && source.weight < minPacketThreshold && remaining >= minPacketThreshold){
         skippedSmallSources += 1;
         continue;
       }
 
       const wanted = Math.min(remaining, source.weight);
-      const allowSmallFinal = settings.minPacketEnabled && remaining < minPacket;
+      const allowSmallFinal = settings.minPacketEnabled && remaining < minPacketThreshold;
       const { send, sentWeight } = takeDefense(source, wanted);
       if(sentWeight <= 0) continue;
 
-      if(settings.minPacketEnabled && sentWeight < minPacket && !allowSmallFinal){
+      if(settings.minPacketEnabled && sentWeight < minPacketThreshold && !allowSmallFinal){
         restoreDefense(source,send);
         skippedSmallSources += 1;
         continue;
       }
 
-      if(settings.minPacketEnabled && sentWeight < minPacket && allowSmallFinal){
+      if(settings.minPacketEnabled && sentWeight < minPacketThreshold && allowSmallFinal){
         smallFinalCommands += 1;
       }
 
@@ -514,10 +495,10 @@ function buildPlan(){
   }
 
   if(skippedSmallSources){
-    warnings.push(`${skippedSmallSources} sender saltati perché sotto il minimo ${minPacket}.`);
+    warnings.push(`${skippedSmallSources} sender saltati perché sotto il peso minimo.`);
   }
   if(smallFinalCommands){
-    warnings.push(`${smallFinalCommands} comando finale sotto ${minPacket} usato per chiudere un bunker.`);
+    warnings.push(`${smallFinalCommands} comando finale sotto il peso minimo usato per chiudere un bunker.`);
   }
 
   return {
@@ -585,10 +566,6 @@ function decodeSettings(text){
 
 function loadSaved(){
   els.enemyVillagesStatic.textContent = STATIC_ENEMY_VILLAGES.join("\n");
-  const now = new Date();
-  now.setDate(now.getDate() + 1);
-  now.setHours(22,0,0,0);
-  els.arrivalDateTime.value = toLocalInputValue(now);
   const saved = localStorage.getItem(STORAGE_KEY);
   if(saved) setSettings(JSON.parse(saved));
 }
@@ -615,28 +592,19 @@ function bind(){
       alert(`Settings import failed: ${err.message}`);
     }
   });
-  document.getElementById("demoBtn").addEventListener("click", () => {
-    els.troopCsv.value = SAMPLE;
-    const arrival = els.arrivalDateTime.value.replace("T", " ");
-    if(!els.bunkerVillages.value.trim()) els.bunkerVillages.value = `462|559 10000 ${arrival}\n482|548 15000 ${arrival}`;
-    calculate();
-  });
   document.getElementById("clearBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    const now = new Date();
-    now.setDate(now.getDate() + 1);
-    now.setHours(22,0,0,0);
     setSettings({
-      worldSpeed: 1,
-      unitSpeed: 1,
+      worldSpeed: "",
+      unitSpeed: "",
       bunkerVillages: "",
-      targetDefense: 10000,
-      arrivalDateTime: toLocalInputValue(now),
-      maxSenderPerBunker: 20,
+      targetDefense: "",
+      arrivalDateTime: "",
+      maxSenderPerBunker: "",
       outputSort: "player",
       troopCsv: "",
       minPacketEnabled: true,
-      minPacketWeight: 1000
+      minPacketWeight: ""
     });
     els.resultBox.value = "";
     els.summaryBox.textContent = "";

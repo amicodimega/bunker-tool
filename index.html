@@ -21,37 +21,37 @@
     </section>
 
     <section class="grid">
-      <article class="card">
+      <article class="card worldCard compactCard">
         <h2>Impostazioni mondo</h2>
         <div class="twoCols">
           <label>Velocità
-            <input id="worldSpeed" class="input" type="number" min="0.01" step="0.01" value="1" />
+            <input id="worldSpeed" class="input" type="number" min="0.01" step="0.01" placeholder="" />
           </label>
           <label>Modificatore unità
-            <input id="unitSpeed" class="input" type="number" min="0.01" step="0.01" value="1" />
+            <input id="unitSpeed" class="input" type="number" min="0.01" step="0.01" placeholder="" />
           </label>
         </div>
-        <p class="hint">Usa il punto per i decimali. Tempi base: spear 18, sword 22, heavy 11 min/campo.</p>
+        <p class="hint">Usa il punto per i decimali.</p>
       </article>
 
       <article class="card">
         <h2>Bunker</h2>
         <label>Villaggi da bunkerare
-          <textarea id="bunkerVillages" class="input textarea mono" rows="6" placeholder="Un bunker per riga:
-462|559 10000 2026-06-25 22:00:00
-482|548 15000 2026-06-25 22:15:00
+          <textarea id="bunkerVillages" class="input textarea mono" rows="8" placeholder="Una riga per bunker:
+COORD QUANTITÀ DATA ORA
 
-Se quantità o arrivo mancano, usa i default sotto."></textarea>
+La quantità può essere diversa per ogni bunker.
+Se quantità o arrivo mancano, usa i campi sotto."></textarea>
         </label>
         <div class="twoCols">
-          <label>Quantità default
-            <input id="targetDefense" class="input" type="number" min="1" step="1" value="10000" />
+          <label>Quantità se manca nella riga
+            <input id="targetDefense" class="input" type="number" min="1" step="1" placeholder="" />
           </label>
-          <label>Arrivo default
+          <label>Arrivo se manca nella riga
             <input id="arrivalDateTime" class="input" type="datetime-local" step="1" />
           </label>
         </div>
-        <p class="hint">Quantità = spear + sword + heavy * 4. Ogni riga bunker accetta quantità e data/ora proprie.</p>
+        <p class="hint">Formato riga: <code>coord quantità data ora</code>. La quantità è peso difesa: lance + spade + cavalleria pesante * 4. Ogni bunker può avere una quantità diversa.</p>
       </article>
 
       <article class="card staticCard">
@@ -67,10 +67,10 @@ Se quantità o arrivo mancano, usa i default sotto."></textarea>
           <span>Invia almeno 1k di peso difesa per comando quando possibile</span>
         </label>
         <label>Peso minimo comando
-          <input id="minPacketWeight" class="input" type="number" min="1" step="1" value="1000" />
+          <input id="minPacketWeight" class="input" type="number" min="1" step="1" placeholder="" />
         </label>
         <label>Max sender per bunker
-          <input id="maxSenderPerBunker" class="input" type="number" min="0" step="1" value="20" />
+          <input id="maxSenderPerBunker" class="input" type="number" min="0" step="1" placeholder="" />
         </label>
         <label>Ordina output
           <select id="outputSort" class="input">
@@ -78,7 +78,7 @@ Se quantità o arrivo mancano, usa i default sotto."></textarea>
             <option value="unit">Per unità</option>
           </select>
         </label>
-        <p class="hint">Se il bunker resta sotto il minimo, il comando finale sotto soglia viene ammesso e segnalato.</p>
+        <p class="hint">Metti 0 per non limitare i sender.</p>
       </article>
 
       <article class="card wide">
@@ -87,7 +87,6 @@ Se quantità o arrivo mancano, usa i default sotto."></textarea>
           <textarea id="troopCsv" class="input textarea mono" rows="12" placeholder="Incolla export Tribal Wars. Colonne richieste: Coords, Player, spear, sword, heavy"></textarea>
         </label>
         <div class="actions">
-          <button id="demoBtn" type="button">Carica esempio</button>
           <button id="clearBtn" type="button">Pulisci</button>
         </div>
       </article>
@@ -97,7 +96,7 @@ Se quantità o arrivo mancano, usa i default sotto."></textarea>
       <div class="resultHeader">
         <div>
           <h2>Piano</h2>
-          <p class="muted">Scegli output per player o per unità. I tempi sono arrotondati al secondo, senza millisecondi.</p>
+          <p class="muted">Il piano mostra solo comandi, truppe, partenze e distanze.</p>
         </div>
         <div class="actions compact">
           <button id="calcBtn" type="button">Calcola</button>

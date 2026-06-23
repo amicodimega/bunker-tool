@@ -2,71 +2,94 @@
 
 Tool statico per GitHub Pages per pianificare bunker difensivi in Tribal Wars.
 
-## Funzioni
+## File da caricare
 
-- Inserimento dei bunker con quantità e data/ora di arrivo.
-- Default globale per quantità e arrivo.
-- Lista nemici statica in `app.js`, sezione `STATIC_ENEMY_VILLAGES`.
-- Incolla export truppe Tribal Wars con colonne `Coords`, `Player`, `spear`, `sword`, `heavy`.
-- Priorità sender per ogni bunker:
-  1. più lontano dal nemico più vicino
-  2. più peso difensivo disponibile
-  3. più vicino al bunker
-- Peso difensivo: `spear + sword + heavy * 4`.
-- Flag per comando minimo, default 1000 peso difesa.
-- Il comando finale sotto soglia viene ammesso quando serve a chiudere il bunker.
-- Limite variabile di sender per bunker, default 20, usa 0 per nessun limite.
-- Output ordinabile per player o per unità.
-- Partenza separata per spear, sword e heavy.
-- Tempi arrotondati al secondo, senza millisecondi.
-- Warnings per truppe insufficienti, sender sotto soglia, limite sender e configurazioni non valide.
-- Copia e carica setup condiviso. I nemici statici non vengono sovrascritti.
+Carica nella root del repository:
 
-## Velocità base
-
-```text
-spear = 18 min/campo
-sword = 22 min/campo
-heavy = 11 min/campo
-```
-
-Formula:
-
-```text
-tempo_viaggio = distanza * velocità_base / velocità_mondo / modificatore_unità
-```
-
-## Formato bunker
-
-```text
-462|559 10000 2026-06-25 22:00:00
-482|548 15000 2026-06-25 22:15:00
-485|551
-```
-
-Se quantità o data/ora mancano, il tool usa i valori default.
-
-## Nemici statici
-
-Modifica in `app.js`:
-
-```js
-const STATIC_ENEMY_VILLAGES = [
-  "500|500",
-  "505|497"
-];
-```
+- `index.html`
+- `styles.css`
+- `app.js`
+- `.nojekyll`
 
 ## GitHub Pages
 
-1. Carica `index.html`, `styles.css`, `app.js` e `.nojekyll` nella root del repository.
-2. Vai in Settings, Pages.
-3. Seleziona Deploy from a branch.
-4. Seleziona branch `main`.
-5. Seleziona folder `/ (root)`.
+1. Vai su `Settings`.
+2. Vai su `Pages`.
+3. Source: `Deploy from a branch`.
+4. Branch: `main`.
+5. Folder: `/ (root)`.
+6. Salva.
 
-URL atteso:
+## Formato bunker
+
+Nel campo bunker inserisci una riga per ogni villaggio:
 
 ```text
-https://amicodimega.github.io/bunker-tool/
+COORD QUANTITÀ DATA ORA
 ```
+
+La quantità può essere diversa per ogni bunker.
+
+Esempio di struttura, senza usare questi valori come default:
+
+```text
+xxx|yyy quantità aaaa-mm-gg hh:mm:ss
+xxx|yyy quantità aaaa-mm-gg hh:mm:ss
+```
+
+Se una riga contiene solo la coordinata, il tool usa i campi di fallback sotto la lista bunker.
+
+## Peso difesa
+
+Il target bunker usa questo peso:
+
+```text
+spear = 1
+sword = 1
+heavy = 4
+```
+
+Quindi:
+
+```text
+peso = spear + sword + heavy * 4
+```
+
+## Peso minimo comando
+
+Quando il flag è attivo, il tool evita comandi troppo piccoli. Il motore accetta anche comandi vicini al peso minimo, così un invio da circa 900 viene trattato come valido per un minimo 1000.
+
+## Max sender per bunker
+
+Il campo limita quanti villaggi sender vengono usati per ogni bunker dopo l’ordinamento multicriterio.
+
+Usa `0` per non avere limite.
+
+## Ordinamento sender
+
+Per ogni bunker, i villaggi sender vengono ordinati così:
+
+1. più lontani dal nemico più vicino
+2. più difesa disponibile
+3. più vicini al bunker
+
+## Output
+
+L'output può essere ordinato:
+
+- per player
+- per unità
+
+Il piano mostra solo informazioni operative: player, villaggio, bunker, truppe, partenza e distanze.
+
+## Nemici statici
+
+Modifica la lista in `app.js`:
+
+```js
+const STATIC_ENEMY_VILLAGES = [
+  "xxx|yyy"
+];
+```
+
+Il setup condiviso non modifica la lista nemici.

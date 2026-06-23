@@ -61,6 +61,20 @@ h2{font-size:19px;margin-bottom:14px}
   margin-bottom:18px;
 }
 .wide{grid-column:1 / -1}
+
+.compactCard{
+  padding:14px;
+}
+.compactCard h2{
+  font-size:16px;
+  margin-bottom:10px;
+}
+.worldCard .input{
+  padding:8px 10px;
+}
+.worldCard .hint{
+  margin-top:4px;
+}
 .twoCols{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
