@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tribal Wars Bunker Planner</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <section class="card hero">
+      <div>
+        <p class="eyebrow">Tribal Wars</p>
+        <h1>Bunker Planner</h1>
+        <p class="muted">Plan defensive support with synchronized arrival times, sender priority by enemy distance, optional minimum packet size, and optional single-player filtering.</p>
+      </div>
+      <div class="heroActions">
+        <button id="copySettingsBtn" type="button">Copy settings</button>
+        <button id="pasteSettingsBtn" type="button">Load settings</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>World settings</h2>
+        <div class="twoCols">
+          <label>Speed
+            <input id="worldSpeed" class="input" type="number" min="0.01" step="0.01" value="1" />
+          </label>
+          <label>Unit speed modifier
+            <input id="unitSpeed" class="input" type="number" min="0.01" step="0.01" value="1" />
+          </label>
+        </div>
+        <p class="hint">Use decimals with a dot. Travel time uses base unit speed divided by world speed and unit speed modifier.</p>
+      </article>
+
+      <article class="card">
+        <h2>Bunker targets</h2>
+        <label>Villages to bunker
+          <textarea id="bunkerVillages" class="input textarea mono" rows="6" placeholder="One bunker per line:
+462|559 10000 22:00:00
+482|548 15000 22:15:00
+
+If quantity or arrival is omitted, defaults below are used."></textarea>
+        </label>
+        <div class="twoCols">
+          <label>Default quantity
+            <input id="targetDefense" class="input" type="number" min="1" step="1" value="10000" />
+          </label>
+          <label>Default arrival time
+            <input id="arrivalTime" class="input" type="time" step="1" value="22:00:00" />
+          </label>
+        </div>
+        <p class="hint">Quantity means spear + sword + heavy * 4. Each bunker line may have its own quantity and arrival time.</p>
+      </article>
+
+      <article class="card staticCard">
+        <h2>Static enemy villages</h2>
+        <pre id="enemyVillagesStatic" class="staticBox mono"></pre>
+        <p class="hint">Edit <code>STATIC_ENEMY_VILLAGES</code> in <code>app.js</code> when the enemy list changes. Shared settings do not overwrite this list.</p>
+      </article>
+
+      <article class="card">
+        <h2>Rules</h2>
+        <label class="checkRow">
+          <input id="minPacketEnabled" type="checkbox" checked />
+          <span>Send at least 1k defense weight per command when possible</span>
+        </label>
+        <label>Minimum command weight
+          <input id="minPacketWeight" class="input" type="number" min="1" step="1" value="1000" />
+        </label>
+        <label class="checkRow">
+          <input id="singlePlayerEnabled" type="checkbox" />
+          <span>Use only one player</span>
+        </label>
+        <label>Player name
+          <input id="singlePlayerName" class="input" type="text" placeholder="Example: zambo700" />
+        </label>
+      </article>
+
+      <article class="card wide">
+        <h2>Friendly troops</h2>
+        <label>Troop table
+          <textarea id="troopCsv" class="input textarea mono" rows="12" placeholder="Paste the Tribal Wars table export here. Required columns: Coords, Player, spear, sword, heavy"></textarea>
+        </label>
+        <div class="actions">
+          <button id="demoBtn" type="button">Load sample</button>
+          <button id="clearBtn" type="button">Clear</button>
+        </div>
+      </article>
+    </section>
+
+    <section class="card">
+      <div class="resultHeader">
+        <div>
+          <h2>Plan</h2>
+          <p class="muted">Copy the rows into chat or use them as a send order checklist.</p>
+        </div>
+        <div class="actions compact">
+          <button id="calcBtn" type="button">Calculate</button>
+          <button id="copyResultBtn" type="button">Copy result</button>
+        </div>
+      </div>
+      <div id="errorBox" class="error" hidden></div>
+      <div id="summaryBox" class="summary"></div>
+      <textarea id="resultBox" class="output mono" rows="18" readonly></textarea>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="dialogBox">
+      <h2>Load shared settings</h2>
+      <p class="muted">Paste settings copied from this tool. Static enemy villages are not changed by imports.</p>
+      <textarea id="settingsImport" class="input textarea mono" rows="10"></textarea>
+      <div class="actions end">
+        <button value="cancel" type="submit">Cancel</button>
+        <button id="applySettingsBtn" value="default" type="button">Apply</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
