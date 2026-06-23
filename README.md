@@ -60,3 +60,18 @@ const STATIC_ENEMY_VILLAGES = [
 2. Vai in Settings, Pages.
 3. Seleziona Deploy from branch.
 4. Seleziona branch `main` e cartella `/ (root)`.
+
+
+## Bunker workflow
+
+1. Paste only bunker coordinates in the bunker input box.
+2. Set quantity and arrival in the small fields before adding, or edit them later in the table.
+3. Use the table to activate, disable, edit, or remove each bunker.
+
+Each bunker has its own quantity and arrival time. Quantity means defensive weight: spear + sword + heavy * 4.
+
+## Rules
+
+- Peso minimo comando: skips commands below the configured weight.
+- Consenti arrotondamento del peso minimo: treats values close to the minimum as valid. For example, with 1000 as minimum, values from 900 are accepted.
+- Limite villaggi mittenti per bunker: caps how many source villages can be used for each bunker. Empty or 0 means no limit.

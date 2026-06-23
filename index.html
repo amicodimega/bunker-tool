@@ -9,21 +9,15 @@
 <body>
   <main class="wrap">
     <section class="card hero">
-      <div>
+      <div class="heroText">
         <p class="eyebrow">Tribal Wars</p>
         <h1>Bunker Planner</h1>
         <p class="muted">Pianifica supporti difensivi con arrivo sincronizzato, priorità per distanza dai nemici, peso minimo comando e lista bunker editabile.</p>
       </div>
-      <div class="heroActions">
-        <button id="copySettingsBtn" type="button">Copia setup</button>
-        <button id="pasteSettingsBtn" type="button">Carica setup</button>
-      </div>
-    </section>
 
-    <section class="grid">
-      <article class="card worldCard compactCard">
+      <div class="heroSettings">
         <h2>Impostazioni mondo</h2>
-        <div class="twoCols compactInputs">
+        <div class="worldInline">
           <label>Velocità
             <input id="worldSpeed" class="input" type="number" min="0.01" step="0.01" value="1" />
           </label>
@@ -31,8 +25,14 @@
             <input id="unitSpeed" class="input" type="number" min="0.01" step="0.01" value="1" />
           </label>
         </div>
-      </article>
+        <div class="heroActions">
+          <button id="copySettingsBtn" type="button">Copia setup</button>
+          <button id="pasteSettingsBtn" type="button">Carica setup</button>
+        </div>
+      </div>
+    </section>
 
+    <section class="grid">
       <article class="card">
         <h2>Bunker</h2>
         <label>Coordinate da aggiungere
@@ -68,12 +68,6 @@
         <p id="emptyBunkerHint" class="hint">Nessun bunker inserito.</p>
       </article>
 
-      <article class="card staticCard">
-        <h2>Nemici statici</h2>
-        <pre id="enemyVillagesStatic" class="staticBox mono"></pre>
-        <p class="hint">Modifica <code>STATIC_ENEMY_VILLAGES</code> in <code>app.js</code>. Il setup condiviso non cambia questa lista.</p>
-      </article>
-
       <article class="card">
         <h2>Regole</h2>
         <label class="checkRow">
@@ -82,6 +76,10 @@
         </label>
         <label>Peso minimo comando
           <input id="minPacketWeight" class="input" type="number" min="1" step="1" value="1000" />
+        </label>
+        <label class="checkRow">
+          <input id="minPacketRoundingEnabled" type="checkbox" checked />
+          <span>Consenti arrotondamento del peso minimo</span>
         </label>
         <label>Limite villaggi mittenti per bunker
           <input id="maxSenderPerBunker" class="input" type="number" min="0" step="1" />
@@ -92,7 +90,7 @@
             <option value="unit">Per unità</option>
           </select>
         </label>
-        <p class="hint">Il limite indica quanti villaggi mittenti il planner usa al massimo per ogni bunker. Lascia vuoto o inserisci 0 per non limitare.</p>
+        <p class="hint">Il limite indica quanti villaggi mittenti usare al massimo per ogni bunker. Lascia vuoto o inserisci 0 per non limitare.</p>
       </article>
 
       <article class="card wide">

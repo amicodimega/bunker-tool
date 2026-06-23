@@ -242,3 +242,37 @@ dialog{
 @media (max-width:780px){
   .compactInputs{grid-template-columns:1fr 1fr}
 }
+.heroText{
+  flex:1 1 520px;
+}
+.heroSettings{
+  flex:0 0 360px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  background:#fbfdff;
+}
+.heroSettings h2{
+  font-size:15px;
+  margin:0 0 8px;
+}
+.worldInline{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.worldInline label{
+  margin-bottom:8px;
+  font-size:13px;
+}
+.worldInline .input{
+  padding:8px 9px;
+  margin-top:5px;
+}
+.heroSettings .heroActions{
+  margin-top:6px;
+}
+@media (max-width:780px){
+  .heroSettings{margin-top:14px}
+  .worldInline{grid-template-columns:1fr 1fr}
+}

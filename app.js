@@ -1,4 +1,4 @@
-const STORAGE_KEY = "tw-bunker-planner-settings-v6";
+const STORAGE_KEY = "tw-bunker-planner-settings-v7";
 const COORD_RE = /\b(\d{1,3})\|(\d{1,3})\b/g;
 
 const STATIC_ENEMY_VILLAGES = [
@@ -26,10 +26,10 @@ const els = {
   defaultBunkerArrival: document.getElementById("defaultBunkerArrival"),
   bunkerTableBody: document.getElementById("bunkerTableBody"),
   emptyBunkerHint: document.getElementById("emptyBunkerHint"),
-  enemyVillagesStatic: document.getElementById("enemyVillagesStatic"),
   troopCsv: document.getElementById("troopCsv"),
   minPacketEnabled: document.getElementById("minPacketEnabled"),
   minPacketWeight: document.getElementById("minPacketWeight"),
+  minPacketRoundingEnabled: document.getElementById("minPacketRoundingEnabled"),
   maxSenderPerBunker: document.getElementById("maxSenderPerBunker"),
   outputSort: document.getElementById("outputSort"),
   resultBox: document.getElementById("resultBox"),
@@ -222,7 +222,8 @@ function getSettings(){
     outputSort: els.outputSort.value,
     troopCsv: els.troopCsv.value,
     minPacketEnabled: els.minPacketEnabled.checked,
-    minPacketWeight: els.minPacketWeight.value
+    minPacketWeight: els.minPacketWeight.value,
+    minPacketRoundingEnabled: els.minPacketRoundingEnabled.checked
   };
 }
 
@@ -237,6 +238,7 @@ function setSettings(settings){
   if(settings.troopCsv !== undefined) els.troopCsv.value = settings.troopCsv;
   if(settings.minPacketEnabled !== undefined) els.minPacketEnabled.checked = Boolean(settings.minPacketEnabled);
   if(settings.minPacketWeight !== undefined) els.minPacketWeight.value = settings.minPacketWeight;
+  if(settings.minPacketRoundingEnabled !== undefined) els.minPacketRoundingEnabled.checked = Boolean(settings.minPacketRoundingEnabled);
   renderBunkerTable();
 }
 
@@ -404,7 +406,7 @@ function buildPlan(){
   const enemies = parseCoords(STATIC_ENEMY_VILLAGES.join("\n"));
   const bunkers = getActiveBunkers();
   const minPacket = settings.minPacketEnabled ? Math.round(Number(settings.minPacketWeight)) : 1;
-  const minPacketThreshold = settings.minPacketEnabled ? Math.floor(minPacket * 0.9) : 1;
+  const minPacketThreshold = settings.minPacketEnabled ? (settings.minPacketRoundingEnabled ? Math.floor(minPacket * 0.9) : minPacket) : 1;
   const maxSenderPerBunker = Math.floor(Number(settings.maxSenderPerBunker || 0));
   let sources = parseTroops(settings.troopCsv);
 
@@ -496,12 +498,6 @@ function buildPlan(){
     lines.push("");
   }
 
-  if(skippedSmallSources){
-    warnings.push(`${skippedSmallSources} villaggi saltati perché sotto il peso minimo.`);
-  }
-  if(smallFinalCommands){
-    warnings.push(`${smallFinalCommands} comando finale sotto il peso minimo usato per chiudere un bunker.`);
-  }
 
   return {
     text: lines.join("\n"),
@@ -567,7 +563,6 @@ function decodeSettings(text){
 }
 
 function loadSaved(){
-  els.enemyVillagesStatic.textContent = STATIC_ENEMY_VILLAGES.join("\n");
   const saved = localStorage.getItem(STORAGE_KEY);
   if(saved){
     setSettings(JSON.parse(saved));
@@ -577,6 +572,7 @@ function loadSaved(){
       unitSpeed: 1,
       minPacketEnabled: true,
       minPacketWeight: 1000,
+      minPacketRoundingEnabled: true,
       outputSort: "player"
     });
   }
@@ -647,6 +643,7 @@ function bind(){
       troopCsv: "",
       minPacketEnabled: true,
       minPacketWeight: 1000,
+      minPacketRoundingEnabled: true,
       bunkers: []
     });
     els.bunkerCoordsInput.value = "";
@@ -656,7 +653,7 @@ function bind(){
     clearError();
   });
 
-  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.maxSenderPerBunker,els.outputSort,els.troopCsv,els.minPacketEnabled,els.minPacketWeight]){
+  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.maxSenderPerBunker,els.outputSort,els.troopCsv,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled]){
     element.addEventListener("input", persist);
   }
 }
