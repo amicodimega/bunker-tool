@@ -276,3 +276,24 @@ dialog{
   .heroSettings{margin-top:14px}
   .worldInline{grid-template-columns:1fr 1fr}
 }
+
+.bunkerTable td.num{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.troopTable th:nth-child(n+4),
+.troopTable td:nth-child(n+4){
+  text-align:right;
+}
+.troopTable th:last-child,
+.troopTable td:last-child{
+  text-align:left;
+}
+#clearBtn{
+  background:#fff7ed;
+  border-color:#fed7aa;
+  color:#9a3412;
+}
+#clearBtn:hover{
+  background:#ffedd5;
+}

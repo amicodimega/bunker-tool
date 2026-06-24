@@ -9,21 +9,15 @@
 <body>
   <main class="wrap">
     <section class="card hero">
-      <div>
+      <div class="heroText">
         <p class="eyebrow">Tribal Wars</p>
         <h1>Bunker Planner</h1>
-        <p class="muted">Pianifica supporti difensivi con data e ora di arrivo, priorità per distanza dai nemici, peso minimo comando e lista nemici statica.</p>
+        <p class="muted">Pianifica supporti difensivi con arrivo sincronizzato, priorità per distanza dai nemici, peso minimo comando e lista bunker editabile.</p>
       </div>
-      <div class="heroActions">
-        <button id="copySettingsBtn" type="button">Copia setup</button>
-        <button id="pasteSettingsBtn" type="button">Carica setup</button>
-      </div>
-    </section>
 
-    <section class="grid">
-      <article class="card">
+      <div class="heroSettings">
         <h2>Impostazioni mondo</h2>
-        <div class="twoCols">
+        <div class="worldInline">
           <label>Velocità
             <input id="worldSpeed" class="input" type="number" min="0.01" step="0.01" value="1" />
           </label>
@@ -31,46 +25,65 @@
             <input id="unitSpeed" class="input" type="number" min="0.01" step="0.01" value="1" />
           </label>
         </div>
-        <p class="hint">Usa il punto per i decimali. Tempi base: spear 18, sword 22, heavy 11 min/campo.</p>
-      </article>
+        <div class="heroActions">
+          <button id="copySettingsBtn" type="button">Copia setup</button>
+          <button id="pasteSettingsBtn" type="button">Carica setup</button>
+          <button id="clearBtn" type="button">Reset tutto</button>
+        </div>
+      </div>
+    </section>
 
+    <section class="grid">
       <article class="card">
         <h2>Bunker</h2>
-        <label>Villaggi da bunkerare
-          <textarea id="bunkerVillages" class="input textarea mono" rows="6" placeholder="Un bunker per riga:
-462|559 10000 2026-06-25 22:00:00
-482|548 15000 2026-06-25 22:15:00
-
-Se quantità o arrivo mancano, usa i default sotto."></textarea>
+        <label>Coordinate da aggiungere
+          <textarea id="bunkerCoordsInput" class="input textarea mono" rows="5" placeholder="Inserisci una o più coordinate, una per riga o separate da spazio."></textarea>
         </label>
         <div class="twoCols">
-          <label>Quantità default
-            <input id="targetDefense" class="input" type="number" min="1" step="1" value="10000" />
+          <label>Quantità per nuovi bunker
+            <input id="defaultBunkerTarget" class="input" type="number" min="1" step="1" />
           </label>
-          <label>Arrivo default
-            <input id="arrivalDateTime" class="input" type="datetime-local" step="1" />
+          <label>Arrivo per nuovi bunker
+            <input id="defaultBunkerArrival" class="input" type="datetime-local" step="1" />
           </label>
         </div>
-        <p class="hint">Quantità = spear + sword + heavy * 4. Ogni riga bunker accetta quantità e data/ora proprie.</p>
-      </article>
+        <div class="actions">
+          <button id="addBunkersBtn" type="button">Aggiungi bunker</button>
+        </div>
+        <p class="hint">Formato atteso: coordinate tipo <code>483|550</code>. Dopo l’aggiunta, modifica quantità e arrivo nella tabella. La quantità è peso difesa: lance + spade + cavalleria pesante * 4.</p>
 
-      <article class="card staticCard">
-        <h2>Nemici statici</h2>
-        <pre id="enemyVillagesStatic" class="staticBox mono"></pre>
-        <p class="hint">Modifica <code>STATIC_ENEMY_VILLAGES</code> in <code>app.js</code>. Il setup condiviso non cambia questa lista.</p>
+        <div class="tableWrap">
+          <table class="bunkerTable">
+            <thead>
+              <tr>
+                <th>Attivo</th>
+                <th>Villaggio</th>
+                <th>Quantità</th>
+                <th>Arrivo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="bunkerTableBody"></tbody>
+          </table>
+        </div>
+        <p id="emptyBunkerHint" class="hint">Nessun bunker inserito.</p>
       </article>
 
       <article class="card">
         <h2>Regole</h2>
         <label class="checkRow">
           <input id="minPacketEnabled" type="checkbox" checked />
-          <span>Invia almeno 1k di peso difesa per comando quando possibile</span>
+          <span>Usa peso minimo per comando</span>
         </label>
         <label>Peso minimo comando
           <input id="minPacketWeight" class="input" type="number" min="1" step="1" value="1000" />
         </label>
-        <label>Max sender per bunker
-          <input id="maxSenderPerBunker" class="input" type="number" min="0" step="1" value="20" />
+        <label class="checkRow">
+          <input id="minPacketRoundingEnabled" type="checkbox" checked />
+          <span>Consenti arrotondamento dei pesi</span>
+        </label>
+        <label>Limite villaggi mittenti per bunker
+          <input id="maxSenderPerBunker" class="input" type="number" min="0" step="1" />
         </label>
         <label>Ordina output
           <select id="outputSort" class="input">
@@ -78,18 +91,37 @@ Se quantità o arrivo mancano, usa i default sotto."></textarea>
             <option value="unit">Per unità</option>
           </select>
         </label>
-        <p class="hint">Se il bunker resta sotto il minimo, il comando finale sotto soglia viene ammesso e segnalato.</p>
+        <p class="hint">Il limite indica quanti villaggi mittenti usare al massimo per ogni bunker. Lascia vuoto o inserisci 0 per non limitare.</p>
       </article>
 
       <article class="card wide">
         <h2>Truppe amiche</h2>
         <label>Tabella truppe
-          <textarea id="troopCsv" class="input textarea mono" rows="12" placeholder="Incolla export Tribal Wars. Colonne richieste: Coords, Player, spear, sword, heavy"></textarea>
+          <textarea id="troopCsv" class="input textarea mono" rows="10" placeholder="Incolla export Tribal Wars. Colonne richieste: Coords, Player, spear, sword, heavy"></textarea>
         </label>
         <div class="actions">
-          <button id="demoBtn" type="button">Carica esempio</button>
-          <button id="clearBtn" type="button">Pulisci</button>
+          <button id="loadTroopsBtn" type="button">Carica truppe</button>
         </div>
+        <p class="hint">Dopo aver caricato la tabella, puoi attivare o disattivare i villaggi mittenti da usare nel piano.</p>
+
+        <div class="tableWrap">
+          <table class="bunkerTable troopTable">
+            <thead>
+              <tr>
+                <th>Attivo</th>
+                <th>Villaggio</th>
+                <th>Player</th>
+                <th>Spear</th>
+                <th>Sword</th>
+                <th>Heavy</th>
+                <th>Peso</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="troopTableBody"></tbody>
+          </table>
+        </div>
+        <p id="emptyTroopHint" class="hint">Nessuna truppa caricata.</p>
       </article>
     </section>
 
@@ -97,7 +129,7 @@ Se quantità o arrivo mancano, usa i default sotto."></textarea>
       <div class="resultHeader">
         <div>
           <h2>Piano</h2>
-          <p class="muted">Scegli output per player o per unità. I tempi sono arrotondati al secondo, senza millisecondi.</p>
+          <p class="muted">Il piano mostra comandi, truppe, partenze e distanza dal nemico più vicino.</p>
         </div>
         <div class="actions compact">
           <button id="calcBtn" type="button">Calcola</button>
