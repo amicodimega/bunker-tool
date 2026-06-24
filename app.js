@@ -500,6 +500,7 @@ function formatPlayerCommands(commands){
     lines.push("");
     for(const command of playerCommands){
       lines.push(`${command.sourceCoord} -> ${command.bunkerCoord}`);
+      if(command.supportUrl) lines.push(`[url=${command.supportUrl}]Support[/url]`);
       if(command.send.spear) lines.push(formatUnitSendLine(command.send.spear, "spear", command.deadlines.spear));
       if(command.send.sword) lines.push(formatUnitSendLine(command.send.sword, "sword", command.deadlines.sword));
       if(command.send.heavy) lines.push(formatUnitSendLine(command.send.heavy, "heavy", command.deadlines.heavy));
@@ -626,7 +627,8 @@ function buildPlan(){
         sentWeight: planWeight,
         actualWeight: actualFutureWeight,
         deadlines,
-        enemyDistance: source.enemyDistance
+        enemyDistance: source.enemyDistance,
+        supportUrl: (typeof VILLAGE_ID_BY_COORD!== "undefined" && VILLAGE_ID_BY_COORD[source.coord] && VILLAGE_ID_BY_COORD[bunker.coord]) ? `game.php?village=${VILLAGE_ID_BY_COORD[source.coord]}&screen=place&target=${VILLAGE_ID_BY_COORD[bunker.coord]}` : null
       });
     }
 
