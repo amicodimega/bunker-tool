@@ -178,10 +178,7 @@ function sendWeight(send){
 
 function effectiveWeight(weight, roundingEnabled){
   if(!roundingEnabled || weight <= 0) return weight;
-  const step = 1000;
-  const next = Math.ceil(weight / step) * step;
-  if(next > weight && weight >= next * 0.9) return next;
-  return weight;
+  return Math.floor(weight / 1000) * 1000;
 }
 
 function takeDefense(source, wanted){
@@ -471,9 +468,11 @@ function sortSourcesForBunker(sources,bunker){
   return sources.slice().sort((a,b) => {
     const enemySort = b.enemyDistance - a.enemyDistance;
     if(enemySort) return enemySort;
-    const weightSort = b.weight - a.weight;
-    if(weightSort) return weightSort;
-    return distance(a,bunker) - distance(b,bunker);
+
+    const bunkerSort = distance(b,bunker) - distance(a,bunker);
+    if(bunkerSort) return bunkerSort;
+
+    return b.weight - a.weight;
   });
 }
 
@@ -559,10 +558,15 @@ function buildPlan(){
   let smallFinalCommands = 0;
   const now = getItalyNow();
 
-  for(const bunker of bunkers){
+  for(const [bunkerIndex, bunker] of bunkers.entries()){
     let remaining = Math.round(bunker.target);
     let sentHere = 0;
     const bunkerCommands = [];
+
+    if(bunkerIndex > 0){
+      lines.push("=========================================");
+      lines.push("");
+    }
 
     lines.push(`[b]BUNKER[/b] ${bunker.coord}`);
     lines.push("");
@@ -593,6 +597,12 @@ function buildPlan(){
       }
 
       const planWeight = effectiveWeight(actualFutureWeight, roundingEnabled);
+      if(planWeight <= 0){
+        restoreDefense(source,send);
+        skippedSmallSources += 1;
+        continue;
+      }
+
       if(settings.minPacketEnabled && planWeight < minPacket && !allowSmallFinal){
         restoreDefense(source,send);
         skippedSmallSources += 1;

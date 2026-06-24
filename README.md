@@ -78,7 +78,7 @@ Each bunker has its own quantity and arrival time. Quantity means defensive weig
 
 - Copyright: Soobinize.
 - Peso minimo comando: skips commands below the configured weight.
-- Consenti arrotondamento dei pesi: usa pesi arrotondati nel piano quando un comando è vicino alla cifra piena.
+- Consenti arrotondamento dei pesi: arrotonda per difetto a migliaia il peso contato nel bunker. Il totale bunker usa i pesi arrotondati.
 
 
 ## Truppe amiche
@@ -138,3 +138,42 @@ Ogni bunker può avere una percentuale di riduzione velocità supporti. Esempio:
 ## Filtro truppe amiche
 
 Quando carichi il CSV, un villaggio amico non viene caricato se ha contemporaneamente meno di 50 spear, meno di 50 sword e meno di 50 heavy.
+
+
+## Criterio selezione villaggi
+
+1. Più lontani dal nemico più vicino.
+2. Più lontani dal bunker, così partono prima i supporti più lenti.
+3. Peso disponibile solo come spareggio finale.
+
+## Separatore bunker
+
+Nel piano ogni bunker dopo il primo viene separato con:
+
+```text
+=========================================
+```
+
+## Generazione mappa TWStats
+
+Usa `generate_twstats_village_map.py` per creare una mappa statica coordinate -> village id da TWStats.
+
+Esempio:
+
+```bash
+python generate_twstats_village_map.py \
+  --base-url "https://it.twstats.com/it98/index.php?page=village&id=" \
+  --start 1 \
+  --end 20000 \
+  --out village-map.js
+```
+
+Il file generato contiene:
+
+```js
+const VILLAGE_ID_BY_COORD = {
+  "497|497": 1
+};
+```
+
+Poi puoi incollare la mappa in `app.js` e usarla per generare URL `game.php?village=ID_MITTENTE&screen=place&target=ID_BUNKER`.
