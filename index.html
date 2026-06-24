@@ -50,7 +50,7 @@
         <div class="actions">
           <button id="addBunkersBtn" type="button">Aggiungi bunker</button>
         </div>
-        <p class="hint">Formato atteso: coordinate tipo <code>483|550</code>. Dopo l’aggiunta, modifica quantità e arrivo nella tabella. La quantità è peso difesa: lance + spade + cavalleria pesante * 4. La riduzione velocità supporti rallenta i tempi di viaggio solo per il bunker indicato.</p>
+        <p class="hint">Formato atteso: coordinate tipo <code>483|550</code>. Dopo l’aggiunta, modifica quantità e arrivo nella tabella. La quantità è peso difesa: lance + spade + cavalleria pesante * 4. La riduzione tempi supporti accorcia i tempi di viaggio solo per il bunker indicato.</p>
 
         <div class="tableWrap">
           <table class="bunkerTable">
@@ -60,7 +60,7 @@
                 <th>Villaggio</th>
                 <th>Quantità</th>
                 <th>Arrivo</th>
-                <th>Riduzione velocità supporti %</th>
+                <th>Riduzione tempi supporti %</th>
                 <th></th>
               </tr>
             </thead>
@@ -83,13 +83,17 @@
           <input id="minPacketRoundingEnabled" type="checkbox" checked />
           <span>Consenti arrotondamento dei pesi</span>
         </label>
+        <label class="checkRow">
+          <input id="ignoreHeavyEnabled" type="checkbox" />
+          <span>Non considerare gli oni</span>
+        </label>
         <label>Ordina output
           <select id="outputSort" class="input">
             <option value="player" selected>Per player</option>
             <option value="unit">Per unità</option>
           </select>
         </label>
-        <p class="hint">Il peso minimo evita comandi troppo piccoli. L’arrotondamento considera i comandi vicini alla cifra piena.</p>
+        <p class="hint">Il peso minimo evita comandi troppo piccoli. L’arrotondamento considera i pesi per difetto a migliaia. Se attivo, “Non considerare gli oni” esclude la cavalleria pesante dal piano.</p>
       </article>
 
       <article class="card wide">

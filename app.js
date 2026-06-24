@@ -38,6 +38,7 @@ const els = {
   minPacketEnabled: document.getElementById("minPacketEnabled"),
   minPacketWeight: document.getElementById("minPacketWeight"),
   minPacketRoundingEnabled: document.getElementById("minPacketRoundingEnabled"),
+  ignoreHeavyEnabled: document.getElementById("ignoreHeavyEnabled"),
   outputSort: document.getElementById("outputSort"),
   resultBox: document.getElementById("resultBox"),
   errorBox: document.getElementById("errorBox"),
@@ -71,11 +72,11 @@ function minDistanceToEnemies(village,enemies){
   return Math.min(...enemies.map(enemy => distance(village, enemy)));
 }
 
-function travelSeconds(from,to,unit,speed,unitSpeed,supportSlowdownPercent = 0){
+function travelSeconds(from,to,unit,speed,unitSpeed,supportTimeReductionPercent = 0){
   const fields = distance(from,to);
-  const slowdown = Number(supportSlowdownPercent || 0);
-  const supportSpeedFactor = Math.max(0.01, 1 - slowdown / 100);
-  const minutes = UNIT_BASE_MINUTES[unit] * fields / speed / unitSpeed / supportSpeedFactor;
+  const reduction = Number(supportTimeReductionPercent || 0);
+  const timeFactor = Math.max(0.01, 1 - reduction / 100);
+  const minutes = UNIT_BASE_MINUTES[unit] * fields / speed / unitSpeed * timeFactor;
   return Math.round(minutes * 60);
 }
 
@@ -269,6 +270,18 @@ function formatUnitSendLine(amount,unit,departure){
   return `${amount} ${UNIT_TW_LABEL[unit]} [unit]${unit}[/unit] | partenza: ${formatDateTime(departure)}`;
 }
 
+function getVillageId(coord){
+  if(typeof VILLAGE_ID_BY_COORD === "undefined") return null;
+  return VILLAGE_ID_BY_COORD[coord] || null;
+}
+
+function getSupportUrl(sourceCoord,bunkerCoord){
+  const senderId = getVillageId(sourceCoord);
+  const targetId = getVillageId(bunkerCoord);
+  if(!senderId || !targetId) return null;
+  return `game.php?village=${senderId}&screen=place&target=${targetId}`;
+}
+
 function getSettings(){
   return {
     worldSpeed: Number(els.worldSpeed.value),
@@ -282,7 +295,8 @@ function getSettings(){
     friendlyRows: friendlyRows.map(row => ({ ...row })),
     minPacketEnabled: els.minPacketEnabled.checked,
     minPacketWeight: els.minPacketWeight.value,
-    minPacketRoundingEnabled: els.minPacketRoundingEnabled.checked
+    minPacketRoundingEnabled: els.minPacketRoundingEnabled.checked,
+    ignoreHeavyEnabled: els.ignoreHeavyEnabled.checked
   };
 }
 
@@ -298,6 +312,7 @@ function setSettings(settings){
   if(settings.minPacketEnabled !== undefined) els.minPacketEnabled.checked = Boolean(settings.minPacketEnabled);
   if(settings.minPacketWeight !== undefined) els.minPacketWeight.value = settings.minPacketWeight;
   if(settings.minPacketRoundingEnabled !== undefined) els.minPacketRoundingEnabled.checked = Boolean(settings.minPacketRoundingEnabled);
+  if(settings.ignoreHeavyEnabled !== undefined) els.ignoreHeavyEnabled.checked = Boolean(settings.ignoreHeavyEnabled);
   renderBunkerTable();
   renderTroopTable();
 }
@@ -455,7 +470,7 @@ function validate(settings,bunkers,enemies,sources){
   if(!bunkers.length) throw new Error("Attiva almeno un bunker.");
   if(bunkers.some(b => !Number.isFinite(b.target) || b.target <= 0)) throw new Error("Ogni bunker attivo deve avere quantità maggiore di zero.");
   if(bunkers.some(b => !b.arrival)) throw new Error("Ogni bunker attivo deve avere data e ora arrivo valide.");
-  if(bunkers.some(b => !Number.isFinite(b.supportSlowdown) || b.supportSlowdown < 0 || b.supportSlowdown >= 100)) throw new Error("La riduzione velocità supporti deve essere vuota, 0, o un numero tra 1 e 99.");
+  if(bunkers.some(b => !Number.isFinite(b.supportSlowdown) || b.supportSlowdown < 0 || b.supportSlowdown >= 100)) throw new Error("La riduzione tempi supporti deve essere vuota, 0, o un numero tra 1 e 99.");
   if(!enemies.length) throw new Error("Lista nemici statica vuota. Modifica STATIC_ENEMY_VILLAGES in app.js.");
   if(!sources.length) throw new Error("Incolla almeno un villaggio amico con spear, sword o heavy.");
 
@@ -525,6 +540,7 @@ function formatUnitCommands(commands){
     for(const row of rows){
       const command = row.command;
       lines.push(`${command.sourceCoord} ([player]${command.player || "unknown player"}[/player]) -> ${command.bunkerCoord}`);
+      if(command.supportUrl) lines.push(`[url=${command.supportUrl}]Support[/url]`);
       lines.push(`${row.amount} ${UNIT_TW_LABEL[unit]} [unit]${unit}[/unit]`);
       lines.push(`Partenza: ${formatDateTime(row.departure)}`);
       lines.push(`Distanza nemico: ${command.enemyDistance.toFixed(2)}`);
@@ -541,12 +557,18 @@ function buildPlan(){
   const bunkers = getActiveBunkers();
   const minPacket = settings.minPacketEnabled ? Math.round(Number(settings.minPacketWeight)) : 1;
   const roundingEnabled = Boolean(settings.minPacketRoundingEnabled);
+  const ignoreHeavy = Boolean(settings.ignoreHeavyEnabled);
   let sources = getActiveFriendlySources();
 
-  sources = sources.map(source => ({
-    ...source,
-    enemyDistance: minDistanceToEnemies(source,enemies)
-  }));
+  sources = sources.map(source => {
+    const normalized = ignoreHeavy
+      ? { ...source, heavy: 0, weight: source.spear + source.sword }
+      : { ...source };
+    return {
+      ...normalized,
+      enemyDistance: minDistanceToEnemies(normalized,enemies)
+    };
+  }).filter(source => source.weight > 0);
 
   validate(settings,bunkers,enemies,sources);
 
@@ -628,7 +650,7 @@ function buildPlan(){
         actualWeight: actualFutureWeight,
         deadlines,
         enemyDistance: source.enemyDistance,
-        supportUrl: (typeof VILLAGE_ID_BY_COORD!== "undefined" && VILLAGE_ID_BY_COORD[source.coord] && VILLAGE_ID_BY_COORD[bunker.coord]) ? `game.php?village=${VILLAGE_ID_BY_COORD[source.coord]}&screen=place&target=${VILLAGE_ID_BY_COORD[bunker.coord]}` : null
+        supportUrl: getSupportUrl(source.coord,bunker.coord)
       });
     }
 
@@ -721,6 +743,7 @@ function loadSaved(){
     minPacketEnabled: true,
     minPacketWeight: 1000,
     minPacketRoundingEnabled: true,
+    ignoreHeavyEnabled: false,
     outputSort: "player",
     friendlyRows: []
   });
@@ -812,6 +835,7 @@ function bind(){
       minPacketEnabled: true,
       minPacketWeight: 1000,
       minPacketRoundingEnabled: true,
+      ignoreHeavyEnabled: false,
       bunkers: [],
       friendlyRows: []
     });
@@ -822,7 +846,7 @@ function bind(){
     clearError();
   });
 
-  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.outputSort,els.troopCsv,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled]){
+  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.outputSort,els.troopCsv,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled,els.ignoreHeavyEnabled]){
     element.addEventListener("input", persist);
   }
 }

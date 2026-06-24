@@ -6,7 +6,7 @@ Tool statico per GitHub Pages pensato per pianificare bunker difensivi su Tribal
 
 - Impostazioni mondo compatte, con velocità e modificatore unità default a 1.
 - Lista bunker editabile dopo l'inserimento delle coordinate.
-- Riduzione velocità supporti configurabile per ogni bunker.
+- Riduzione tempi supporti configurabile per ogni bunker.
 - Attivazione o disattivazione di ogni bunker.
 - Quantità e arrivo modificabili per ogni bunker.
 - Nemici statici in `app.js`.
@@ -131,7 +131,7 @@ Etichette unità usate nel piano:
 
 Il planner non propone righe con partenza già passata rispetto all'orario italiano corrente. Se una parte del comando è ancora valida, resta nel piano. Se tutte le unità di quel comando hanno partenza già passata, il comando viene escluso.
 
-## Riduzione velocità supporti
+## Riduzione tempi supporti
 
 Ogni bunker può avere una percentuale di riduzione velocità supporti. Esempio: `30` significa supporti più lenti del 30%, quindi il tempo viaggio aumenta. Lascia vuoto oppure `0` per non applicare modifiche.
 
@@ -177,3 +177,13 @@ const VILLAGE_ID_BY_COORD = {
 ```
 
 Poi puoi incollare la mappa in `app.js` e usarla per generare URL `game.php?village=ID_MITTENTE&screen=place&target=ID_BUNKER`.
+
+
+## Heavy cavalry
+
+- Non considerare gli oni: se attivo, la cavalleria pesante viene ignorata nel calcolo del piano, anche se presente nella tabella truppe.
+
+
+## Link supporto
+
+Se presente, `villages.js` viene caricato prima di `app.js` e permette di generare link `[url=game.php?village=...&screen=place&target=...]Support[/url]`.
