@@ -6,10 +6,12 @@ Tool statico per GitHub Pages pensato per pianificare bunker difensivi su Tribal
 
 - Impostazioni mondo compatte, con velocità e modificatore unità default a 1.
 - Lista bunker editabile dopo l'inserimento delle coordinate.
+- Riduzione velocità supporti configurabile per ogni bunker.
 - Attivazione o disattivazione di ogni bunker.
 - Quantità e arrivo modificabili per ogni bunker.
 - Nemici statici in `app.js`.
 - Parsing export truppe con colonne `Coords`, `Player`, `spear`, `sword`, `heavy`.
+- Esclusione automatica dei villaggi amici con meno di 50 lance, meno di 50 spade e meno di 50 heavy.
 - Peso difesa: `spear + sword + heavy * 4`.
 - Peso minimo comando con arrotondamento operativo interno.
 - Tabella truppe amiche con attivazione o disattivazione dei villaggi mittenti.
@@ -36,6 +38,7 @@ Dopo l'aggiunta comparirà una tabella dove puoi modificare:
 - villaggio
 - quantità richiesta
 - data e ora arrivo
+- percentuale di riduzione velocità supporti
 
 La quantità è peso difesa:
 
@@ -99,3 +102,40 @@ Quindi la distanza dal bunker viene usata solo come terzo criterio, dopo sicurez
 ## Reset
 
 Il pulsante `Reset tutto` cancella bunker, truppe, output e impostazioni del planner. Non modifica `STATIC_ENEMY_VILLAGES` in `app.js`.
+
+## Formato output Tribal Wars
+
+Il piano usa BBCode pronto per Tribal Wars:
+
+```text
+[b]BUNKER[/b] 498|471
+
+Target: 20000
+Arrivo: 2026-06-25 08:01:28
+
+[b]Player:[/b] [player]Blinker[/player]
+
+527|583 -> 498|471
+3894 lance [unit]spear[/unit] | partenza: 2026-06-23 21:18:59
+831 oni [unit]heavy[/unit] | partenza: 2026-06-24 10:48:50
+Peso: 8000
+Distanza nemico: 87.28
+```
+
+Etichette unità usate nel piano:
+
+- `lance [unit]spear[/unit]`
+- `spade [unit]sword[/unit]`
+- `oni [unit]heavy[/unit]`
+
+## Partenze già passate
+
+Il planner non propone righe con partenza già passata rispetto all'orario italiano corrente. Se una parte del comando è ancora valida, resta nel piano. Se tutte le unità di quel comando hanno partenza già passata, il comando viene escluso.
+
+## Riduzione velocità supporti
+
+Ogni bunker può avere una percentuale di riduzione velocità supporti. Esempio: `30` significa supporti più lenti del 30%, quindi il tempo viaggio aumenta. Lascia vuoto oppure `0` per non applicare modifiche.
+
+## Filtro truppe amiche
+
+Quando carichi il CSV, un villaggio amico non viene caricato se ha contemporaneamente meno di 50 spear, meno di 50 sword e meno di 50 heavy.

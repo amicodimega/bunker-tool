@@ -50,7 +50,7 @@
         <div class="actions">
           <button id="addBunkersBtn" type="button">Aggiungi bunker</button>
         </div>
-        <p class="hint">Formato atteso: coordinate tipo <code>483|550</code>. Dopo l’aggiunta, modifica quantità e arrivo nella tabella. La quantità è peso difesa: lance + spade + cavalleria pesante * 4.</p>
+        <p class="hint">Formato atteso: coordinate tipo <code>483|550</code>. Dopo l’aggiunta, modifica quantità e arrivo nella tabella. La quantità è peso difesa: lance + spade + cavalleria pesante * 4. La riduzione velocità supporti rallenta i tempi di viaggio solo per il bunker indicato.</p>
 
         <div class="tableWrap">
           <table class="bunkerTable">
@@ -60,6 +60,7 @@
                 <th>Villaggio</th>
                 <th>Quantità</th>
                 <th>Arrivo</th>
+                <th>Riduzione velocità supporti %</th>
                 <th></th>
               </tr>
             </thead>
@@ -102,7 +103,7 @@
         <div class="actions">
           <button id="loadTroopsBtn" type="button">Carica truppe</button>
         </div>
-        <p class="hint">Dopo aver caricato la tabella, puoi attivare o disattivare i villaggi mittenti da usare nel piano.</p>
+        <p class="hint">Dopo aver caricato la tabella, puoi attivare o disattivare i villaggi mittenti da usare nel piano. I villaggi con meno di 50 lance, meno di 50 spade e meno di 50 heavy non vengono caricati.</p>
 
         <div class="tableWrap">
           <table class="bunkerTable troopTable">

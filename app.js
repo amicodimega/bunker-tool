@@ -18,6 +18,12 @@ const UNIT_LABEL = {
   heavy: "heavy"
 };
 
+const UNIT_TW_LABEL = {
+  spear: "lance",
+  sword: "spade",
+  heavy: "oni"
+};
+
 const els = {
   worldSpeed: document.getElementById("worldSpeed"),
   unitSpeed: document.getElementById("unitSpeed"),
@@ -66,9 +72,11 @@ function minDistanceToEnemies(village,enemies){
   return Math.min(...enemies.map(enemy => distance(village, enemy)));
 }
 
-function travelSeconds(from,to,unit,speed,unitSpeed){
+function travelSeconds(from,to,unit,speed,unitSpeed,supportSlowdownPercent = 0){
   const fields = distance(from,to);
-  const minutes = UNIT_BASE_MINUTES[unit] * fields / speed / unitSpeed;
+  const slowdown = Number(supportSlowdownPercent || 0);
+  const supportSpeedFactor = Math.max(0.01, 1 - slowdown / 100);
+  const minutes = UNIT_BASE_MINUTES[unit] * fields / speed / unitSpeed / supportSpeedFactor;
   return Math.round(minutes * 60);
 }
 
@@ -152,6 +160,7 @@ function parseTroops(text){
     const spear = toInt(cols[index.spear]);
     const sword = toInt(cols[index.sword]);
     const heavy = toInt(cols[index.heavy]);
+    if(spear < 50 && sword < 50 && heavy < 50) continue;
     const weight = spear + sword + heavy * 4;
     if(weight <= 0) continue;
     villages.push({ id: crypto.randomUUID(), enabled: true, ...coords, player, spear, sword, heavy, weight });
@@ -216,10 +225,52 @@ function sentUnits(send){
 function getUnitDeadlines(source,bunker,send,settings){
   const deadlines = {};
   for(const unit of sentUnits(send)){
-    const seconds = travelSeconds(source,bunker,unit,settings.worldSpeed,settings.unitSpeed);
+    const seconds = travelSeconds(source,bunker,unit,settings.worldSpeed,settings.unitSpeed,bunker.supportSlowdown);
     deadlines[unit] = addSeconds(bunker.arrival, -seconds);
   }
   return deadlines;
+}
+
+function getItalyNow(){
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return new Date(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+    Number(values.hour),
+    Number(values.minute),
+    Number(values.second),
+    0
+  );
+}
+
+function removeExpiredUnits(source,send,deadlines,now){
+  for(const unit of ["spear","sword","heavy"]){
+    if(!send[unit]) continue;
+    if(deadlines[unit] && deadlines[unit].getTime() <= now.getTime()){
+      source[unit] += send[unit];
+      send[unit] = 0;
+      delete deadlines[unit];
+    }
+  }
+
+  source.weight = availableWeight(source);
+  return sendWeight(send);
+}
+
+function formatUnitSendLine(amount,unit,departure){
+  return `${amount} ${UNIT_TW_LABEL[unit]} [unit]${unit}[/unit] | partenza: ${formatDateTime(departure)}`;
 }
 
 function getSettings(){
@@ -265,7 +316,8 @@ function normalizeBunkers(rows){
       coord: coords.coord,
       enabled: row.enabled !== false,
       target: String(row.target || ""),
-      arrival: String(row.arrival || "")
+      arrival: String(row.arrival || ""),
+      supportSlowdown: String(row.supportSlowdown || "")
     };
   }).filter(Boolean);
 }
@@ -277,6 +329,7 @@ function normalizeFriendlyRows(rows){
     const spear = toInt(row.spear);
     const sword = toInt(row.sword);
     const heavy = toInt(row.heavy);
+    if(spear < 50 && sword < 50 && heavy < 50) return null;
     const weight = spear + sword + heavy * 4;
     if(weight <= 0) return null;
     return {
@@ -344,7 +397,8 @@ function getActiveBunkers(){
       ...coords,
       target: Number(row.target),
       arrival: parseDateTime(row.arrival),
-      arrivalText: row.arrival
+      arrivalText: row.arrival,
+      supportSlowdown: Number(row.supportSlowdown || 0)
     };
   });
 }
@@ -365,6 +419,7 @@ function renderBunkerTable(){
       <td class="mono">${row.coord}</td>
       <td><input class="tableInput" type="number" min="1" step="1" data-field="target" value="${row.target}" /></td>
       <td><input class="tableInput" type="datetime-local" step="1" data-field="arrival" value="${row.arrival}" /></td>
+      <td><input class="tableInput" type="number" min="0" max="99" step="1" data-field="supportSlowdown" value="${row.supportSlowdown || ""}" placeholder="0" /></td>
       <td><button type="button" data-action="remove">Rimuovi</button></td>
     `;
     els.bunkerTableBody.appendChild(tr);
@@ -387,7 +442,8 @@ function addBunkersFromInput(){
       coord: coord.coord,
       enabled: true,
       target: els.defaultBunkerTarget.value,
-      arrival: els.defaultBunkerArrival.value
+      arrival: els.defaultBunkerArrival.value,
+      supportSlowdown: ""
     });
     existing.add(coord.coord);
   }
@@ -404,6 +460,7 @@ function validate(settings,bunkers,enemies,sources){
   if(!bunkers.length) throw new Error("Attiva almeno un bunker.");
   if(bunkers.some(b => !Number.isFinite(b.target) || b.target <= 0)) throw new Error("Ogni bunker attivo deve avere quantità maggiore di zero.");
   if(bunkers.some(b => !b.arrival)) throw new Error("Ogni bunker attivo deve avere data e ora arrivo valide.");
+  if(bunkers.some(b => !Number.isFinite(b.supportSlowdown) || b.supportSlowdown < 0 || b.supportSlowdown >= 100)) throw new Error("La riduzione velocità supporti deve essere vuota, 0, o un numero tra 1 e 99.");
   if(!enemies.length) throw new Error("Lista nemici statica vuota. Modifica STATIC_ENEMY_VILLAGES in app.js.");
   if(!sources.length) throw new Error("Incolla almeno un villaggio amico con spear, sword o heavy.");
 
@@ -444,12 +501,13 @@ function formatPlayerCommands(commands){
   }
 
   for(const [player, playerCommands] of [...byPlayer.entries()].sort((a,b) => a[0].localeCompare(b[0]))){
-    lines.push(`[b]Player: ${player}[/b]`);
+    lines.push(`[b]Player:[/b] [player]${player}[/player]`);
+    lines.push("");
     for(const command of playerCommands){
       lines.push(`${command.sourceCoord} -> ${command.bunkerCoord}`);
-      if(command.send.spear) lines.push(`${command.send.spear} spear | partenza: ${formatDateTime(command.deadlines.spear)}`);
-      if(command.send.sword) lines.push(`${command.send.sword} sword | partenza: ${formatDateTime(command.deadlines.sword)}`);
-      if(command.send.heavy) lines.push(`${command.send.heavy} heavy | partenza: ${formatDateTime(command.deadlines.heavy)}`);
+      if(command.send.spear) lines.push(formatUnitSendLine(command.send.spear, "spear", command.deadlines.spear));
+      if(command.send.sword) lines.push(formatUnitSendLine(command.send.sword, "sword", command.deadlines.sword));
+      if(command.send.heavy) lines.push(formatUnitSendLine(command.send.heavy, "heavy", command.deadlines.heavy));
       lines.push(`Peso: ${command.sentWeight}`);
       lines.push(`Distanza nemico: ${command.enemyDistance.toFixed(2)}`);
       lines.push("");
@@ -467,11 +525,11 @@ function formatUnitCommands(commands){
     if(!rows.length) continue;
     rows.sort((a,b) => a.departure - b.departure || a.command.player.localeCompare(b.command.player));
 
-    lines.push(`[b]${UNIT_LABEL[unit].toUpperCase()}[/b]`);
+    lines.push(`[b]${UNIT_TW_LABEL[unit].toUpperCase()}[/b]`);
     for(const row of rows){
       const command = row.command;
-      lines.push(`${command.sourceCoord} (${command.player || "unknown player"}) -> ${command.bunkerCoord}`);
-      lines.push(`${row.amount} ${UNIT_LABEL[unit]}`);
+      lines.push(`${command.sourceCoord} ([player]${command.player || "unknown player"}[/player]) -> ${command.bunkerCoord}`);
+      lines.push(`${row.amount} ${UNIT_TW_LABEL[unit]} [unit]${unit}[/unit]`);
       lines.push(`Partenza: ${formatDateTime(row.departure)}`);
       lines.push(`Distanza nemico: ${command.enemyDistance.toFixed(2)}`);
       lines.push("");
@@ -504,13 +562,15 @@ function buildPlan(){
   let commandCount = 0;
   let skippedSmallSources = 0;
   let smallFinalCommands = 0;
+  const now = getItalyNow();
 
   for(const bunker of bunkers){
     let remaining = Math.round(bunker.target);
     let sentHere = 0;
     const bunkerCommands = [];
 
-    lines.push(`[b]BUNKER ${bunker.coord}[/b]`);
+    lines.push(`[b]BUNKER[/b] ${bunker.coord}`);
+    lines.push("");
     lines.push(`Target: ${bunker.target}`);
     lines.push(`Arrivo: ${formatDateTime(bunker.arrival)}`);
     lines.push("");
@@ -533,7 +593,13 @@ function buildPlan(){
       const { send, sentWeight } = takeDefense(source, wanted);
       if(sentWeight <= 0) continue;
 
-      const planWeight = effectiveWeight(sentWeight, roundingEnabled);
+      const deadlines = getUnitDeadlines(source,bunker,send,settings);
+      const actualFutureWeight = removeExpiredUnits(source, send, deadlines, now);
+      if(actualFutureWeight <= 0){
+        continue;
+      }
+
+      const planWeight = effectiveWeight(actualFutureWeight, roundingEnabled);
       if(settings.minPacketEnabled && planWeight < minPacket && !allowSmallFinal){
         restoreDefense(source,send);
         skippedSmallSources += 1;
@@ -549,14 +615,13 @@ function buildPlan(){
       totalSentWeight += planWeight;
       commandCount += 1;
 
-      const deadlines = getUnitDeadlines(source,bunker,send,settings);
       bunkerCommands.push({
         sourceCoord: source.coord,
         bunkerCoord: bunker.coord,
         player: source.player || "unknown player",
         send,
         sentWeight: planWeight,
-        actualWeight: sentWeight,
+        actualWeight: actualFutureWeight,
         deadlines,
         enemyDistance: source.enemyDistance
       });
@@ -668,6 +733,7 @@ function bind(){
     const field = event.target.dataset.field;
     if(field === "target") row.target = event.target.value;
     if(field === "arrival") row.arrival = event.target.value;
+    if(field === "supportSlowdown") row.supportSlowdown = event.target.value;
     persist();
   });
 
