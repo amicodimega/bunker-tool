@@ -83,16 +83,13 @@
           <input id="minPacketRoundingEnabled" type="checkbox" checked />
           <span>Consenti arrotondamento dei pesi</span>
         </label>
-        <label>Limite villaggi mittenti per bunker
-          <input id="maxSenderPerBunker" class="input" type="number" min="0" step="1" />
-        </label>
         <label>Ordina output
           <select id="outputSort" class="input">
             <option value="player" selected>Per player</option>
             <option value="unit">Per unità</option>
           </select>
         </label>
-        <p class="hint">Il limite indica quanti villaggi mittenti usare al massimo per ogni bunker. Lascia vuoto o inserisci 0 per non limitare.</p>
+        <p class="hint">Il peso minimo evita comandi troppo piccoli. L’arrotondamento considera i comandi vicini alla cifra piena.</p>
       </article>
 
       <article class="card wide">
@@ -142,6 +139,7 @@
       <div id="warningsBox" class="warnings" hidden></div>
       <textarea id="resultBox" class="output mono" rows="18" readonly></textarea>
     </section>
+    <footer class="copyright">© Soobinize</footer>
   </main>
 
   <dialog id="settingsDialog">

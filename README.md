@@ -16,7 +16,6 @@ Tool statico per GitHub Pages pensato per pianificare bunker difensivi su Tribal
 - Peso minimo comando con arrotondamento operativo interno.
 - Tabella truppe amiche con attivazione o disattivazione dei villaggi mittenti.
 - Reset generale nella parte alta del planner.
-- Limite villaggi mittenti per bunker, opzionale.
 - Output ordinabile per player o per unità.
 - Setup copiabile e ricaricabile.
 
@@ -77,9 +76,9 @@ Each bunker has its own quantity and arrival time. Quantity means defensive weig
 
 ## Rules
 
+- Copyright: Soobinize.
 - Peso minimo comando: skips commands below the configured weight.
 - Consenti arrotondamento dei pesi: usa pesi arrotondati nel piano quando un comando è vicino alla cifra piena.
-- Limite villaggi mittenti per bunker: caps how many source villages can be used for each bunker. Empty or 0 means no limit.
 
 
 ## Truppe amiche

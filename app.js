@@ -38,7 +38,6 @@ const els = {
   minPacketEnabled: document.getElementById("minPacketEnabled"),
   minPacketWeight: document.getElementById("minPacketWeight"),
   minPacketRoundingEnabled: document.getElementById("minPacketRoundingEnabled"),
-  maxSenderPerBunker: document.getElementById("maxSenderPerBunker"),
   outputSort: document.getElementById("outputSort"),
   resultBox: document.getElementById("resultBox"),
   errorBox: document.getElementById("errorBox"),
@@ -280,7 +279,7 @@ function getSettings(){
     defaultBunkerTarget: els.defaultBunkerTarget.value,
     defaultBunkerArrival: els.defaultBunkerArrival.value,
     bunkers: bunkerRows.map(row => ({ ...row })),
-    maxSenderPerBunker: els.maxSenderPerBunker.value,
+    maxSenderPerBunker: "",
     outputSort: els.outputSort.value,
     troopCsv: els.troopCsv.value,
     friendlyRows: friendlyRows.map(row => ({ ...row })),
@@ -296,7 +295,6 @@ function setSettings(settings){
   if(settings.defaultBunkerTarget !== undefined) els.defaultBunkerTarget.value = settings.defaultBunkerTarget;
   if(settings.defaultBunkerArrival !== undefined) els.defaultBunkerArrival.value = settings.defaultBunkerArrival;
   if(settings.bunkers !== undefined) bunkerRows = normalizeBunkers(settings.bunkers);
-  if(settings.maxSenderPerBunker !== undefined) els.maxSenderPerBunker.value = settings.maxSenderPerBunker;
   if(settings.outputSort !== undefined) els.outputSort.value = settings.outputSort;
   if(settings.troopCsv !== undefined) els.troopCsv.value = settings.troopCsv;
   if(settings.friendlyRows !== undefined) friendlyRows = normalizeFriendlyRows(settings.friendlyRows);
@@ -467,8 +465,6 @@ function validate(settings,bunkers,enemies,sources){
   const minPacket = Number(settings.minPacketWeight);
   if(settings.minPacketEnabled && (!Number.isFinite(minPacket) || minPacket <= 0)) throw new Error("Il peso minimo comando deve essere maggiore di zero.");
 
-  const maxSender = Number(settings.maxSenderPerBunker || 0);
-  if(!Number.isFinite(maxSender) || maxSender < 0) throw new Error("Il limite villaggi mittenti deve essere vuoto, 0 oppure maggiore di zero.");
 }
 
 function sortSourcesForBunker(sources,bunker){
@@ -545,7 +541,6 @@ function buildPlan(){
   const bunkers = getActiveBunkers();
   const minPacket = settings.minPacketEnabled ? Math.round(Number(settings.minPacketWeight)) : 1;
   const roundingEnabled = Boolean(settings.minPacketRoundingEnabled);
-  const maxSenderPerBunker = Math.floor(Number(settings.maxSenderPerBunker || 0));
   let sources = getActiveFriendlySources();
 
   sources = sources.map(source => ({
@@ -576,9 +571,7 @@ function buildPlan(){
     lines.push("");
 
     const sortedSources = sortSourcesForBunker(sources,bunker);
-    const limitedSources = maxSenderPerBunker > 0 ? sortedSources.slice(0, maxSenderPerBunker) : sortedSources;
-
-    for(const source of limitedSources){
+    for(const source of sortedSources){
       if(remaining <= 0) break;
       if(source.coord === bunker.coord || source.weight <= 0) continue;
 
@@ -636,8 +629,7 @@ function buildPlan(){
     lines.push(`Totale inviato a ${bunker.coord}: ${sentHere}`);
     if(remaining > 0){
       totalMissing += remaining;
-      const limitText = maxSenderPerBunker > 0 ? ` Limite villaggi mittenti: ${maxSenderPerBunker}.` : "";
-      const warning = `Bunker ${bunker.coord} non completato. Mancano ${remaining}.${limitText}`;
+      const warning = `Bunker ${bunker.coord} non completato. Mancano ${remaining}.`;
       warnings.push(warning);
       lines.push(`[color=#b42318]${warning}[/color]`);
     }else{
@@ -803,7 +795,6 @@ function bind(){
       unitSpeed: 1,
       defaultBunkerTarget: "",
       defaultBunkerArrival: "",
-      maxSenderPerBunker: "",
       outputSort: "player",
       troopCsv: "",
       minPacketEnabled: true,
@@ -819,7 +810,7 @@ function bind(){
     clearError();
   });
 
-  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.maxSenderPerBunker,els.outputSort,els.troopCsv,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled]){
+  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.outputSort,els.troopCsv,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled]){
     element.addEventListener("input", persist);
   }
 }
