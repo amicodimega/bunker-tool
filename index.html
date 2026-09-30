@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=bunkers2" />
+  <link rel="stylesheet" href="styles.css?v=collapse4" />
 </head>
 <body>
   <main class="wrap">
@@ -99,15 +99,14 @@
         <p class="hint">Il peso minimo evita comandi troppo piccoli. L’arrotondamento considera i comandi vicini alla cifra piena.</p>
       </article>
 
-      <article class="card wide">
-        <h2>Truppe amiche</h2>
+      <details class="card wide friendlySection" open>
+        <summary>Truppe amiche</summary>
         <div class="actions">
           <button id="loadTroopsBtn" type="button">Truppe proprie</button>
           <button id="openDefensesBtn" type="button">Difese presenti</button>
-          <button id="toggleFriendlyList" type="button" aria-expanded="true" aria-controls="friendlyVillageList">Nascondi</button>
         </div>
         <p id="troopImportStatus" class="hint">Incolla entrambi gli export per caricare i mittenti.</p>
-        <p class="hint">La tabella mostra la disponibilità stimata dopo la riserva. Attiva o disattiva i mittenti da usare nel piano.</p>
+        <p class="hint">La tabella mostra le truppe disponibili. Attiva o disattiva i mittenti da usare nel piano.</p>
 
         <div id="friendlyVillageList">
         <div class="tableWrap">
@@ -129,7 +128,7 @@
         </div>
         <p id="emptyTroopHint" class="hint">Nessuna truppa caricata.</p>
         </div>
-      </article>
+      </details>
     </section>
 
     <section class="card">
@@ -156,15 +155,15 @@
       </div>
       <p id="mapStatus" class="hint" aria-live="polite"></p>
       <div class="mapWrap"><canvas id="villageMap" aria-label="Mappa interattiva dei villaggi" tabindex="0"></canvas><div id="mapTooltip" role="status" hidden></div></div>
-      <p class="hint">Le truppe dei bunker indicano i nuovi supporti assegnati dal piano. La tabella amici riporta la disponibilità stimata dopo la riserva. Dopo una modifica, premi Calcola per aggiornare le assegnazioni. Su touch, tocca un villaggio per leggere i dettagli.</p>
+      <p class="hint">Le truppe dei bunker indicano i nuovi supporti assegnati dal piano. La tabella amici riporta le truppe disponibili. Dopo una modifica, premi Calcola per aggiornare le assegnazioni. Su touch, tocca un villaggio per leggere i dettagli.</p>
     </section>
     <details class="card existingBunkers" id="existingBunkersSection">
       <summary>Bunker esistenti</summary>
-      <p class="hint">Villaggi con difese superiori alle truppe proprie per almeno un tipo di unità. Il surplus positivo è una quantità minima di supporti ricevuti, non il totale esatto. Questa sezione non modifica il planner.</p>
+      <p class="hint">Villaggi con supporti presenti.</p>
       <p id="existingBunkerStatus" class="hint" aria-live="polite"></p>
-      <div class="tableWrap existingBunkerTable"><table class="bunkerTable"><thead><tr><th>Villaggio</th><th>Player</th><th>Surplus lance</th><th>Surplus spade</th><th>Surplus cavalleria pesante</th><th>Peso surplus</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
+      <div class="tableWrap existingBunkerTable"><table class="bunkerTable"><thead><tr><th>Villaggio</th><th>Player</th><th>Lance in supporto</th><th>Spade in supporto</th><th>Cavalleria pesante in supporto</th><th>Peso supporti</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
       <div class="resultHeader"><h3>Mappa dei bunker esistenti</h3><button id="existingMapFit" type="button">Inquadra tutti</button></div>
-      <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">● Bunker esistenti: blu più scuro = più peso del surplus</span></div>
+      <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">● Bunker esistenti: blu più scuro = più supporti</span></div>
       <p id="existingMapStatus" class="hint" aria-live="polite"></p>
       <div class="mapWrap"><canvas id="existingVillageMap" aria-label="Mappa dei bunker esistenti" tabindex="0"></canvas><div id="existingMapTooltip" role="status" hidden></div></div>
     </details>
@@ -201,7 +200,7 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="app.js?v=bunkers2"></script>
-  <script src="map.js?v=bunkers2"></script>
+  <script src="app.js?v=collapse4"></script>
+  <script src="map.js?v=collapse4"></script>
 </body>
 </html>

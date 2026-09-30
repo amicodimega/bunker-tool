@@ -19,16 +19,16 @@ function createVillageMap(existingMode = false) {
   }
   function details(p){
     if(existingMode){
-      const parts=[`Coordinate: ${p.coord}`];
+      const parts=[p.coord];
       if(p.enemy) parts.push('Villaggio nemico');
-      if(p.friends.length) parts.push(`Amico: ${p.friends[0].player || "Player non indicato"}`);
-      if(p.existing) parts.push(`Surplus positivo\n${troops(p.existing.surplus)}\nPeso surplus: ${num(p.existing.surplusWeight)}`, `Difese totali presenti\n${troops(p.existing)}\nPeso difese totali: ${num(p.existing.weight)}`);
+      if(p.friends.length) parts.push(`${p.friends[0].player || "Player non indicato"}`);
+      if(p.existing) parts.push(`Supporti presenti\n${troops(p.existing.surplus)}\nPeso supporti: ${num(p.existing.surplusWeight)}`, `Difese totali presenti\n${troops(p.existing)}\nPeso difese totali: ${num(p.existing.weight)}`);
       return parts.join('\n\n');
     }
-    const parts=[`Coordinate: ${p.coord}`];
+    const parts=[p.coord];
     if(p.enemy)parts.push('Villaggio nemico');
     if(p.friends.length){
-      for(const f of p.friends)parts.push(`Amico: ${f.player || 'Player non indicato'}${f.enabled?'':' (disattivato)'}\n${f.estimated ? "Disponibilità stimata dopo la riserva" : "Truppe proprie importate"}\n${troops(f.estimated ? getSendableSource(f) : f)}\n${f.estimated ? "Peso disponibile" : "Peso truppe proprie"}: ${num(f.estimated ? getSendableSource(f).weight : f.weight)}`);
+      for(const f of p.friends)parts.push(`${f.player || 'Player non indicato'}${f.enabled?'':' (disattivato)'}\n${f.estimated ? "Truppe disponibili" : "Truppe proprie importate"}\n${troops(f.estimated ? getSendableSource(f) : f)}\n${f.estimated ? "Peso disponibile" : "Peso truppe proprie"}: ${num(f.estimated ? getSendableSource(f).weight : f.weight)}`);
       const outgoing=mapCommands.filter(c=>c.sourceCoord===p.coord);
       if(outgoing.length){const t=units(outgoing);parts.push(`Supporti assegnati in uscita\n${troops(t)}\nBunker: ${[...new Set(outgoing.map(c=>c.bunkerCoord))].join(', ')}`);}
     }

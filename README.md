@@ -8,7 +8,7 @@ Truppe proprie e Difese presenti aprono due finestre per incollare gli export CS
 
 I due export vengono incrociati per coordinate. Per ogni unità la disponibilità stimata è il minimo tra truppe proprie e difese presenti. Viene quindi sottratta la riserva globale per ogni mittente, senza valori negativi. La tabella mantiene le colonne originali e mostra solo le quantità utilizzabili dopo la riserva. I villaggi con meno di 50 unità in tutte e tre le categorie vengono filtrati sulla stima iniziale.
 
-La riserva nelle Regole è espressa in numero di lance, spade e cavalleria pesante, non in peso. Nascondi e Mostra comprimono la tabella senza disattivare i mittenti. Attivo permette la selezione manuale. Copia setup e Carica setup comprendono gli export, le disponibilità stimate e la riserva.
+La riserva nelle Regole è espressa in numero di lance, spade e cavalleria pesante, non in peso. La sezione Truppe amiche si apre e si chiude dal titolo senza disattivare i mittenti. Attivo permette la selezione manuale. Copia setup e Carica setup comprendono gli export, le disponibilità stimate e la riserva.
 
 ## Destinazioni
 

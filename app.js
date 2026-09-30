@@ -1419,7 +1419,7 @@ function addSeconds(date,seconds){
   return new Date(date.getTime() + seconds * 1000);
 }
 
-function splitCsvLine(line){
+function splitCsvLine(line, delimiter = ","){
   const out = [];
   let current = "";
   let quoted = false;
@@ -1427,7 +1427,7 @@ function splitCsvLine(line){
     const char = line[i];
     if(char === '"'){
       quoted = !quoted;
-    }else if(char === "," && !quoted){
+    }else if(char === delimiter && !quoted){
       out.push(current.trim());
       current = "";
     }else{
@@ -1439,7 +1439,7 @@ function splitCsvLine(line){
 }
 
 function toInt(value){
-  const parsed = Number(String(value || "0").replace(/\./g, "").replace(/,/g, ""));
+  const parsed = Number(String(value || "0").replace(/[\s\u00a0\u202f]/g, "").replace(/\./g, "").replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
@@ -1447,10 +1447,18 @@ function parseTroops(text, keepAll = false){
   const rows = String(text || "").split(/\r?\n/).map(line => line.trim()).filter(Boolean);
   if(!rows.length) return [];
 
-  const headerIndex = rows.findIndex(line => /^coords\s*,/i.test(line));
-  if(headerIndex === -1) throw new Error("La tabella truppe deve avere header che inizia con Coords.");
-
-  const headers = splitCsvLine(rows[headerIndex]).map(h => h.toLowerCase());
+  let delimiter = ",";
+  const headerIndex = rows.findIndex(line => {
+    for(const candidate of [",", "\t", ";"]){
+      if(splitCsvLine(line, candidate)[0].replace(/^\uFEFF/, "").toLowerCase() === "coords"){
+        delimiter = candidate;
+        return true;
+      }
+    }
+    return false;
+  });
+  if(headerIndex === -1) throw new Error("L’export deve contenere la colonna Coords.");
+  const headers = splitCsvLine(rows[headerIndex], delimiter).map(h => h.replace(/^\uFEFF/, "").toLowerCase());
   const required = ["coords","player","spear","sword","heavy"];
   for(const name of required){
     if(!headers.includes(name)) throw new Error(`Colonna mancante: ${name}`);
@@ -1460,7 +1468,7 @@ function parseTroops(text, keepAll = false){
   const villages = [];
 
   for(const line of rows.slice(headerIndex + 1)){
-    const cols = splitCsvLine(line);
+    const cols = splitCsvLine(line, delimiter);
     const coords = parseCoords(cols[index.coords] || "")[0];
     if(!coords) continue;
     const player = cols[index.player] || "";
@@ -1686,7 +1694,7 @@ function renderTroopTable(){
 
 function updateImportStatus(){
   document.getElementById("troopImportStatus").textContent = importedTroops && importedDefenses
-    ? "Entrambi gli export caricati. Disponibilità stimata: minimo tra truppe proprie e difese presenti, meno la riserva."
+    ? "Truppe e difese caricate. La tabella mostra le truppe disponibili."
     : importedTroops ? "Truppe proprie caricate. Incolla le difese presenti."
     : importedDefenses ? "Difese presenti caricate. Incolla le truppe proprie."
     : "Incolla entrambi gli export per caricare i mittenti.";
@@ -2105,13 +2113,6 @@ function loadSaved(){
 }
 
 function bind(){
-  document.getElementById("toggleFriendlyList").addEventListener("click", () => {
-    const list = document.getElementById("friendlyVillageList");
-    const button = document.getElementById("toggleFriendlyList");
-    list.hidden = !list.hidden;
-    button.textContent = list.hidden ? "Mostra" : "Nascondi";
-    button.setAttribute("aria-expanded", String(!list.hidden));
-  });
   document.getElementById("addBunkersBtn").addEventListener("click", addBunkersFromInput);
 
   els.bunkerTableBody.addEventListener("input", event => {
@@ -2256,6 +2257,6 @@ function renderExistingBunkers(){
     body.appendChild(tr);
   }
   document.getElementById("existingBunkerStatus").textContent = importedTroops && importedDefenses
-    ? `${rows.length} villaggi con surplus positivo. Peso del surplus: ${rows.reduce((n,row) => n + row.surplusWeight, 0).toLocaleString("it-IT")}.`
+    ? `${rows.length} bunker esistenti. Peso supporti: ${rows.reduce((n,row) => n + row.surplusWeight, 0).toLocaleString("it-IT")}.`
     : "Carica entrambi gli export nella sezione Truppe amiche.";
 }
