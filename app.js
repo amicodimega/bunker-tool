@@ -1357,6 +1357,7 @@ let mapCommands = [];
 let mapPlanReady = false;
 let importedTroops = "";
 let importedDefenses = "";
+let hiddenExistingBunkers = new Set();
 
 function parseCoords(text){
   const found = [];
@@ -1596,6 +1597,7 @@ function getSettings(){
     outputSort: els.outputSort.value,
     troopCsv: importedTroops,
     defenseCsv: importedDefenses,
+    hiddenExistingBunkers: [...hiddenExistingBunkers],
     reserveSpear: document.getElementById("reserveSpear").value,
     reserveSword: document.getElementById("reserveSword").value,
     reserveHeavy: document.getElementById("reserveHeavy").value,
@@ -1615,6 +1617,7 @@ function setSettings(settings){
   if(settings.outputSort !== undefined) els.outputSort.value = settings.outputSort;
   if(settings.troopCsv !== undefined) { importedTroops = settings.troopCsv; els.troopCsv.value = importedTroops; }
   importedDefenses = settings.defenseCsv || "";
+  hiddenExistingBunkers = new Set(Array.isArray(settings.hiddenExistingBunkers) ? settings.hiddenExistingBunkers : []);
   document.getElementById("defenseCsv").value = importedDefenses;
   for(const id of ["reserveSpear", "reserveSword", "reserveHeavy"]) document.getElementById(id).value = settings[id] ?? 0;
   if(settings.friendlyRows !== undefined) friendlyRows = normalizeFriendlyRows(settings.friendlyRows);
@@ -2087,12 +2090,25 @@ async function writeClipboard(text){
   await navigator.clipboard.writeText(text);
 }
 
-function encodeSettings(){
-  return btoa(unescape(encodeURIComponent(JSON.stringify(getSettings()))));
+async function encodeSettings(){
+  const json = JSON.stringify(getSettings());
+  if(typeof CompressionStream === "undefined") return btoa(unescape(encodeURIComponent(json)));
+  const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"));
+  const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  let binary = "";
+  for(let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  return "TWZ1:" + btoa(binary);
 }
 
-function decodeSettings(text){
+async function decodeSettings(text){
   const trimmed = text.trim();
+  if(trimmed.startsWith("TWZ1:")){
+    if(typeof DecompressionStream === "undefined") throw new Error("Apri il setup con una versione aggiornata di Chrome, Edge o Firefox.");
+    const binary = atob(trimmed.slice(5).replace(/\s/g, ""));
+    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    return JSON.parse(await new Response(stream).text());
+  }
   try{
     return JSON.parse(decodeURIComponent(escape(atob(trimmed))));
   }catch(_err){
@@ -2113,6 +2129,13 @@ function loadSaved(){
 }
 
 function bind(){
+  document.getElementById("existingBunkerBody").addEventListener("change", event => {
+    const coord = event.target.dataset.mapCoord;
+    if(!coord) return;
+    if(event.target.checked) hiddenExistingBunkers.delete(coord);
+    else hiddenExistingBunkers.add(coord);
+    window.refreshVillageMap?.();
+  });
   document.getElementById("addBunkersBtn").addEventListener("click", addBunkersFromInput);
 
   els.bunkerTableBody.addEventListener("input", event => {
@@ -2183,15 +2206,15 @@ function bind(){
     if(els.resultBox.value) await writeClipboard(els.resultBox.value);
   });
   document.getElementById("copySettingsBtn").addEventListener("click", async () => {
-    await writeClipboard(encodeSettings());
+    await writeClipboard(await encodeSettings());
   });
   document.getElementById("pasteSettingsBtn").addEventListener("click", () => {
     els.settingsImport.value = "";
     els.settingsDialog.showModal();
   });
-  document.getElementById("applySettingsBtn").addEventListener("click", () => {
+  document.getElementById("applySettingsBtn").addEventListener("click", async () => {
     try{
-      setSettings(decodeSettings(els.settingsImport.value));
+      setSettings(await decodeSettings(els.settingsImport.value));
       els.settingsDialog.close();
       calculate();
     }catch(err){
@@ -2249,6 +2272,14 @@ function renderExistingBunkers(){
   body.replaceChildren();
   for(const row of rows){
     const tr = document.createElement("tr");
+    const visibility = document.createElement("td");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !hiddenExistingBunkers.has(row.coord);
+    checkbox.dataset.mapCoord = row.coord;
+    checkbox.setAttribute("aria-label", `Mostra ${row.coord} nella mappa`);
+    visibility.appendChild(checkbox);
+    tr.appendChild(visibility);
     for(const value of [row.coord, row.player, row.surplus.spear, row.surplus.sword, row.surplus.heavy, row.surplusWeight, row.weight]){
       const td = document.createElement("td");
       td.textContent = typeof value === "number" ? value.toLocaleString("it-IT") : value;

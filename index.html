@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=stars5" />
+  <link rel="stylesheet" href="styles.css?v=visibility7" />
 </head>
 <body>
   <main class="wrap">
@@ -159,9 +159,9 @@
     </section>
     <details class="card existingBunkers" id="existingBunkersSection">
       <summary>Bunker esistenti</summary>
-      <p class="hint">Villaggi con supporti presenti.</p>
+      <p class="hint">Villaggi con supporti presenti. Deseleziona Mappa per nascondere un villaggio.</p>
       <p id="existingBunkerStatus" class="hint" aria-live="polite"></p>
-      <div class="tableWrap existingBunkerTable"><table class="bunkerTable"><thead><tr><th>Villaggio</th><th>Player</th><th>Lance in supporto</th><th>Spade in supporto</th><th>Cavalleria pesante in supporto</th><th>Peso supporti</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
+      <div class="tableWrap existingBunkerTable"><table class="bunkerTable"><thead><tr><th>Mappa</th><th>Villaggio</th><th>Player</th><th>Lance in supporto</th><th>Spade in supporto</th><th>Cavalleria pesante in supporto</th><th>Peso supporti</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
       <div class="resultHeader"><h3>Mappa dei bunker esistenti</h3><button id="existingMapFit" type="button">Inquadra tutti</button></div>
       <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">● Bunker esistenti: blu più scuro = più supporti</span></div>
       <p id="existingMapStatus" class="hint" aria-live="polite"></p>
@@ -200,7 +200,7 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="app.js?v=stars5"></script>
-  <script src="map.js?v=stars5"></script>
+  <script src="app.js?v=visibility7"></script>
+  <script src="map.js?v=visibility7"></script>
 </body>
 </html>

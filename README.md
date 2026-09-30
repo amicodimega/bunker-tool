@@ -31,3 +31,7 @@ La sezione richiudibile sotto la mappa del planner usa gli stessi due export. Se
 Il surplus è un limite inferiore dei supporti ricevuti, poiché eventuali truppe proprie fuori possono compensare parte dei supporti. La tabella mostra anche il peso delle difese totali. La sezione non modifica i mittenti, le riserve o i pesi richiesti nel planner.
 
 La seconda mappa mostra amici grigi e bunker esistenti in blu: più scuro indica maggiore peso del surplus. I dettagli sono visibili al passaggio del mouse o al tocco. Tabella e mappa si aggiornano quando vengono caricati gli export.
+
+Il setup condiviso usa compressione gzip con prefisso TWZ1. Il tool continua a leggere i setup precedenti in Base64 o JSON.
+
+La casella Mappa nella tabella dei bunker esistenti mostra o nasconde il villaggio nella seconda mappa. La selezione viene inclusa nel setup e non modifica il planner.

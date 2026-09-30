@@ -48,9 +48,11 @@ function createVillageMap(existingMode = false) {
     if(importedTroops) for(const f of parseTroops(importedTroops, true)) friendByCoord.set(f.coord, {...f, estimated: false});
     for(const f of friendlyRows) friendByCoord.set(f.coord, {...f, estimated: true});
     for(const f of friendByCoord.values()) add(f.coord).friends.push(f);
-    const existing = getExistingBunkers();
+    const allExisting = getExistingBunkers();
+    const existing = allExisting.filter(row => !hiddenExistingBunkers.has(row.coord));
     if(existingMode) for(const row of existing) add(row.coord).existing = row;
     if(!existingMode) for(const b of bunkerRows)add(b.coord).bunker=b;
+    if(existingMode) for(const coord of hiddenExistingBunkers) entries.delete(coord);
     const used=new Set(mapCommands.map(c=>c.sourceCoord));
     const weights = new Map();
     if(!existingMode) for(const command of mapCommands) weights.set(command.sourceCoord, (weights.get(command.sourceCoord) || 0) + command.actualWeight);
