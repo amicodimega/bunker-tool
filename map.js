@@ -14,7 +14,7 @@ function createVillageMap(existingMode = false) {
   function troops(t){return `Lance: ${num(t.spear)}\nSpade: ${num(t.sword)}\nCavalleria pesante: ${num(t.heavy)}`;}
   function blue(weight){
     const t = Math.sqrt(Math.max(0, weight) / maxWeight);
-    const light=[147,197,253], dark=[18,54,112];
+    const light=[56,155,255], dark=[0,70,210];
     return `rgb(${light.map((v,i) => Math.round(v+(dark[i]-v)*t)).join(',')})`;
   }
   function details(p){
@@ -86,11 +86,19 @@ function createVillageMap(existingMode = false) {
       }
     }
     // Bunkers are drawn last so their outlines stay visible over other categories.
-    for(const p of [...points].sort((a,b)=>Number(!!a.bunker)-Number(!!b.bunker))){
+    for(const p of [...points].sort((a,b)=>Number(!!a.bunker || a.used)-Number(!!b.bunker || b.used))){
       const q=screen(p),r=2.5;
       const active=p.bunker?p.bunker.enabled:p.friends.length?p.friends.some(f=>f.enabled):true;
       const color=p.used?blue(p.displayWeight):p.friends.length?colors.friendly:p.bunker?colors.bunker:colors.enemy;
-      ctx.globalAlpha=active?1:0.4;ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(q.x,q.y,r,0,Math.PI*2);if(active)ctx.fill();else ctx.stroke();
+      ctx.globalAlpha=active?1:0.4;ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
+      if(p.used && !existingMode){
+        for(let i=0;i<10;i++){
+          const angle=-Math.PI/2+i*Math.PI/5, radius=i%2?2.2:5;
+          const x=q.x+Math.cos(angle)*radius,y=q.y+Math.sin(angle)*radius;
+          if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.closePath();ctx.fill();ctx.strokeStyle='#ffffff';ctx.lineWidth=0.8;ctx.stroke();
+      }else{ctx.arc(q.x,q.y,r,0,Math.PI*2);if(active)ctx.fill();else ctx.stroke();}
       if(p.bunker){ctx.strokeStyle=colors.bunker;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x+r,q.y);ctx.lineTo(q.x,q.y+r);ctx.lineTo(q.x-r,q.y);ctx.closePath();ctx.stroke();}
       ctx.globalAlpha=1;
     }
