@@ -50,7 +50,7 @@
         <div class="actions">
           <button id="addBunkersBtn" type="button">Aggiungi bunker</button>
         </div>
-        <p class="hint">Formato atteso: coordinate tipo <code>483|550</code>. Dopo l’aggiunta, modifica quantità e arrivo nella tabella. La quantità è peso difesa: lance + spade + cavalleria pesante * 4. La riduzione tempi supporti accorcia i tempi di viaggio solo per il bunker indicato.</p>
+        <p class="hint">Formato atteso: coordinate tipo <code>483|550</code>. Dopo l’aggiunta, modifica quantità e arrivo nella tabella. La quantità è peso difesa: lance + spade + cavalleria pesante * 4. La riduzione velocità supporti rallenta i tempi di viaggio solo per il bunker indicato.</p>
 
         <div class="tableWrap">
           <table class="bunkerTable">
@@ -60,7 +60,7 @@
                 <th>Villaggio</th>
                 <th>Quantità</th>
                 <th>Arrivo</th>
-                <th>Riduzione tempi supporti %</th>
+                <th>Riduzione velocità supporti %</th>
                 <th></th>
               </tr>
             </thead>
@@ -83,17 +83,13 @@
           <input id="minPacketRoundingEnabled" type="checkbox" checked />
           <span>Consenti arrotondamento dei pesi</span>
         </label>
-        <label class="checkRow">
-          <input id="ignoreHeavyEnabled" type="checkbox" />
-          <span>Non considerare gli oni</span>
-        </label>
         <label>Ordina output
           <select id="outputSort" class="input">
             <option value="player" selected>Per player</option>
             <option value="unit">Per unità</option>
           </select>
         </label>
-        <p class="hint">Il peso minimo evita comandi troppo piccoli. L’arrotondamento considera i pesi per difetto a migliaia. Se attivo, “Non considerare gli oni” esclude la cavalleria pesante dal piano.</p>
+        <p class="hint">Il peso minimo evita comandi troppo piccoli. L’arrotondamento considera i comandi vicini alla cifra piena.</p>
       </article>
 
       <article class="card wide">
@@ -143,6 +139,16 @@
       <div id="warningsBox" class="warnings" hidden></div>
       <textarea id="resultBox" class="output mono" rows="18" readonly></textarea>
     </section>
+    <section class="card" id="mapCard">
+      <div class="resultHeader"><div><h2>Mappa dei villaggi</h2><p class="muted">Passa sui villaggi per leggere coordinate e truppe. Rotella per zoom, trascina per spostare la mappa.</p></div><button type="button" id="mapFit">Inquadra tutti</button></div>
+      <div class="mapLegend">
+        <span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici caricati</span><span class="mapUsed">● Mittenti utilizzati</span><span class="mapBunker">◆ Bunker</span><span>○ Disattivati</span>
+        <label><input type="checkbox" id="mapLinks" checked> Collegamenti del piano</label>
+      </div>
+      <p id="mapStatus" class="hint" aria-live="polite"></p>
+      <div class="mapWrap"><canvas id="villageMap" aria-label="Mappa interattiva dei villaggi" tabindex="0"></canvas><div id="mapTooltip" role="status" hidden></div></div>
+      <p class="hint">Le truppe dei bunker indicano i supporti assegnati dal piano. Le truppe già presenti sono visibili soltanto se il bunker compare nell’export amico. Dopo una modifica, premi Calcola per aggiornare le assegnazioni. Su touch, tocca un villaggio per leggere i dettagli.</p>
+    </section>
     <footer class="copyright">© Soobinize</footer>
   </main>
 
@@ -160,5 +166,6 @@
 
   <script src="villages.js"></script>
   <script src="app.js"></script>
+  <script src="map.js"></script>
 </body>
 </html>
