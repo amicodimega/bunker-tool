@@ -1355,6 +1355,8 @@ let bunkerRows = [];
 let friendlyRows = [];
 let mapCommands = [];
 let mapPlanReady = false;
+let importedTroops = "";
+let importedDefenses = "";
 
 function parseCoords(text){
   const found = [];
@@ -1441,7 +1443,7 @@ function toInt(value){
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function parseTroops(text){
+function parseTroops(text, keepAll = false){
   const rows = String(text || "").split(/\r?\n/).map(line => line.trim()).filter(Boolean);
   if(!rows.length) return [];
 
@@ -1465,9 +1467,9 @@ function parseTroops(text){
     const spear = toInt(cols[index.spear]);
     const sword = toInt(cols[index.sword]);
     const heavy = toInt(cols[index.heavy]);
-    if(spear < 50 && sword < 50 && heavy < 50) continue;
+    if(!keepAll && spear < 50 && sword < 50 && heavy < 50) continue;
     const weight = spear + sword + heavy * 4;
-    if(weight <= 0) continue;
+    if(!keepAll && weight <= 0) continue;
     villages.push({ id: crypto.randomUUID(), enabled: true, ...coords, player, spear, sword, heavy, weight });
   }
 
@@ -1584,7 +1586,11 @@ function getSettings(){
     bunkers: bunkerRows.map(row => ({ ...row })),
     maxSenderPerBunker: "",
     outputSort: els.outputSort.value,
-    troopCsv: els.troopCsv.value,
+    troopCsv: importedTroops,
+    defenseCsv: importedDefenses,
+    reserveSpear: document.getElementById("reserveSpear").value,
+    reserveSword: document.getElementById("reserveSword").value,
+    reserveHeavy: document.getElementById("reserveHeavy").value,
     friendlyRows: friendlyRows.map(row => ({ ...row })),
     minPacketEnabled: els.minPacketEnabled.checked,
     minPacketWeight: els.minPacketWeight.value,
@@ -1599,13 +1605,17 @@ function setSettings(settings){
   if(settings.defaultBunkerArrival !== undefined) els.defaultBunkerArrival.value = settings.defaultBunkerArrival;
   if(settings.bunkers !== undefined) bunkerRows = normalizeBunkers(settings.bunkers);
   if(settings.outputSort !== undefined) els.outputSort.value = settings.outputSort;
-  if(settings.troopCsv !== undefined) els.troopCsv.value = settings.troopCsv;
+  if(settings.troopCsv !== undefined) { importedTroops = settings.troopCsv; els.troopCsv.value = importedTroops; }
+  importedDefenses = settings.defenseCsv || "";
+  document.getElementById("defenseCsv").value = importedDefenses;
+  for(const id of ["reserveSpear", "reserveSword", "reserveHeavy"]) document.getElementById(id).value = settings[id] ?? 0;
   if(settings.friendlyRows !== undefined) friendlyRows = normalizeFriendlyRows(settings.friendlyRows);
   if(settings.minPacketEnabled !== undefined) els.minPacketEnabled.checked = Boolean(settings.minPacketEnabled);
   if(settings.minPacketWeight !== undefined) els.minPacketWeight.value = settings.minPacketWeight;
   if(settings.minPacketRoundingEnabled !== undefined) els.minPacketRoundingEnabled.checked = Boolean(settings.minPacketRoundingEnabled);
   renderBunkerTable();
   renderTroopTable();
+  updateImportStatus();
 }
 
 function normalizeBunkers(rows){
@@ -1655,7 +1665,8 @@ function renderTroopTable(){
   els.troopTableBody.innerHTML = "";
   els.emptyTroopHint.hidden = friendlyRows.length > 0;
 
-  for(const row of friendlyRows){
+  for(const original of friendlyRows){
+    const row = getSendableSource(original);
     const tr = document.createElement("tr");
     tr.dataset.id = row.id;
 
@@ -1673,25 +1684,65 @@ function renderTroopTable(){
   }
 }
 
-function loadFriendlyTroopsFromCsv(){
-  clearError();
-  try{
-    friendlyRows = normalizeFriendlyRows(parseTroops(els.troopCsv.value));
+function updateImportStatus(){
+  document.getElementById("troopImportStatus").textContent = importedTroops && importedDefenses
+    ? "Entrambi gli export caricati. Disponibilità stimata: minimo tra truppe proprie e difese presenti, meno la riserva."
+    : importedTroops ? "Truppe proprie caricate. Incolla le difese presenti."
+    : importedDefenses ? "Difese presenti caricate. Incolla le truppe proprie."
+    : "Incolla entrambi gli export per caricare i mittenti.";
+}
+
+function estimateFriendlyRows(troopText, defenseText){
+  if(!troopText || !defenseText) return [];
+  const troops = parseTroops(troopText, true);
+  const defenses = new Map(parseTroops(defenseText, true).map(row => [row.coord, row]));
+  const previous = new Map(friendlyRows.map(row => [row.coord, row]));
+  return normalizeFriendlyRows(troops.flatMap(row => {
+    const defense = defenses.get(row.coord);
+    if(!defense) return [];
+    const old = previous.get(row.coord);
+    return [{...row, id: old?.id || row.id, enabled: old?.enabled ?? true,
+      spear: Math.min(row.spear, defense.spear),
+      sword: Math.min(row.sword, defense.sword),
+      heavy: Math.min(row.heavy, defense.heavy)}];
+  }));
+}
+
+function applyTroopExport(kind){
+  const isTroops = kind === "troops";
+  const input = document.getElementById(isTroops ? "troopCsv" : "defenseCsv");
+  const error = document.getElementById(isTroops ? "troopImportError" : "defenseImportError");
+  try {
+    const text = input.value.trim();
+    if(!text || !parseTroops(text, true).length) throw new Error("Incolla un export con almeno un villaggio.");
+    const nextTroops = isTroops ? text : importedTroops;
+    const nextDefenses = isTroops ? importedDefenses : text;
+    const nextRows = estimateFriendlyRows(nextTroops, nextDefenses);
+    importedTroops = nextTroops;
+    importedDefenses = nextDefenses;
+    friendlyRows = nextRows;
     renderTroopTable();
-    if(!friendlyRows.length){
-      showError("Nessun villaggio amico con spear, sword o heavy trovato nella tabella.");
-    }
-  }catch(err){
-    friendlyRows = [];
-    renderTroopTable();
-    showError(err.message);
+    updateImportStatus();
+    persist();
+    error.hidden = true;
+    document.getElementById(isTroops ? "troopImportDialog" : "defenseImportDialog").close();
+  } catch(err) {
+    error.textContent = err.message;
+    error.hidden = false;
   }
 }
 
+function getSendableSource(row){
+  const result = {...row};
+  for(const [unit, id] of [["spear", "reserveSpear"], ["sword", "reserveSword"], ["heavy", "reserveHeavy"]]){
+    result[unit] = Math.max(0, row[unit] - Math.max(0, Math.trunc(Number(document.getElementById(id).value) || 0)));
+  }
+  result.weight = availableWeight(result);
+  return result;
+}
+
 function getActiveFriendlySources(){
-  return friendlyRows
-    .filter(row => row.enabled)
-    .map(row => ({ ...row }));
+  return friendlyRows.filter(row => row.enabled).map(getSendableSource).filter(row => row.weight > 0);
 }
 
 function getActiveBunkers(){
@@ -1764,6 +1815,10 @@ function addBunkersFromInput(){
 }
 
 function validate(settings,bunkers,enemies,sources){
+  for(const name of ["reserveSpear", "reserveSword", "reserveHeavy"]){
+    const value = Number(settings[name]);
+    if(!Number.isInteger(value) || value < 0) throw new Error("La riserva deve contenere numeri interi maggiori o uguali a zero.");
+  }
   if(!Number.isFinite(settings.worldSpeed) || settings.worldSpeed <= 0) throw new Error("Velocità mondo deve essere maggiore di zero.");
   if(!Number.isFinite(settings.unitSpeed) || settings.unitSpeed <= 0) throw new Error("Modificatore unità deve essere maggiore di zero.");
   if(!bunkerRows.length) throw new Error("Inserisci almeno un bunker.");
@@ -1772,7 +1827,7 @@ function validate(settings,bunkers,enemies,sources){
   if(bunkers.some(b => !b.arrival)) throw new Error("Ogni bunker attivo deve avere data e ora arrivo valide.");
   if(bunkers.some(b => !Number.isFinite(b.supportSlowdown) || b.supportSlowdown < 0 || b.supportSlowdown >= 100)) throw new Error("La riduzione velocità supporti deve essere vuota, 0, o un numero tra 1 e 99.");
   if(!enemies.length) throw new Error("Lista nemici statica vuota. Modifica STATIC_ENEMY_VILLAGES in app.js.");
-  if(!sources.length) throw new Error("Incolla almeno un villaggio amico con spear, sword o heavy.");
+  if(!sources.length) throw new Error("Nessun mittente attivo con truppe disponibili dopo la riserva.");
 
   const minPacket = Number(settings.minPacketWeight);
   if(settings.minPacketEnabled && (!Number.isFinite(minPacket) || minPacket <= 0)) throw new Error("Il peso minimo comando deve essere maggiore di zero.");
@@ -2054,7 +2109,7 @@ function bind(){
     const list = document.getElementById("friendlyVillageList");
     const button = document.getElementById("toggleFriendlyList");
     list.hidden = !list.hidden;
-    button.textContent = list.hidden ? "Mostra elenco villaggi" : "Nascondi elenco villaggi";
+    button.textContent = list.hidden ? "Mostra" : "Nascondi";
     button.setAttribute("aria-expanded", String(!list.hidden));
   });
   document.getElementById("addBunkersBtn").addEventListener("click", addBunkersFromInput);
@@ -2088,7 +2143,21 @@ function bind(){
     persist();
   });
 
-  document.getElementById("loadTroopsBtn").addEventListener("click", loadFriendlyTroopsFromCsv);
+  document.getElementById("loadTroopsBtn").addEventListener("click", () => {
+    els.troopCsv.value = importedTroops;
+    document.getElementById("troopImportError").hidden = true;
+    document.getElementById("troopImportDialog").showModal();
+  });
+  document.getElementById("openDefensesBtn").addEventListener("click", () => {
+    document.getElementById("defenseCsv").value = importedDefenses;
+    document.getElementById("defenseImportError").hidden = true;
+    document.getElementById("defenseImportDialog").showModal();
+  });
+  document.getElementById("applyTroopsBtn").addEventListener("click", () => applyTroopExport("troops"));
+  document.getElementById("applyDefensesBtn").addEventListener("click", () => applyTroopExport("defenses"));
+  for(const id of ["reserveSpear", "reserveSword", "reserveHeavy"]){
+    document.getElementById(id).addEventListener("input", () => {renderTroopTable(); persist();});
+  }
 
   els.troopTableBody.addEventListener("change", event => {
     const tr = event.target.closest("tr");
@@ -2152,10 +2221,41 @@ function bind(){
     clearError();
   });
 
-  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.outputSort,els.troopCsv,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled]){
+  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.outputSort,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled]){
     element.addEventListener("input", persist);
   }
 }
 
 loadSaved();
 bind();
+
+
+function getExistingBunkers(){
+  if(!importedTroops || !importedDefenses) return [];
+  const own = new Map(parseTroops(importedTroops, true).map(row => [row.coord, row]));
+  return parseTroops(importedDefenses, true).flatMap(defense => {
+    const troop = own.get(defense.coord);
+    if(!troop) return [];
+    const surplus = {spear: Math.max(0, defense.spear - troop.spear), sword: Math.max(0, defense.sword - troop.sword), heavy: Math.max(0, defense.heavy - troop.heavy)};
+    const weight = availableWeight(surplus);
+    return weight > 0 ? [{...defense, surplus, surplusWeight: weight, own: troop}] : [];
+  }).sort((a,b) => b.surplusWeight - a.surplusWeight);
+}
+
+function renderExistingBunkers(){
+  const rows = getExistingBunkers();
+  const body = document.getElementById("existingBunkerBody");
+  body.replaceChildren();
+  for(const row of rows){
+    const tr = document.createElement("tr");
+    for(const value of [row.coord, row.player, row.surplus.spear, row.surplus.sword, row.surplus.heavy, row.surplusWeight, row.weight]){
+      const td = document.createElement("td");
+      td.textContent = typeof value === "number" ? value.toLocaleString("it-IT") : value;
+      tr.appendChild(td);
+    }
+    body.appendChild(tr);
+  }
+  document.getElementById("existingBunkerStatus").textContent = importedTroops && importedDefenses
+    ? `${rows.length} villaggi con surplus positivo. Peso del surplus: ${rows.reduce((n,row) => n + row.surplusWeight, 0).toLocaleString("it-IT")}.`
+    : "Carica entrambi gli export nella sezione Truppe amiche.";
+}

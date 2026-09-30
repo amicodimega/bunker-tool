@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=map2" />
+  <link rel="stylesheet" href="styles.css?v=bunkers2" />
 </head>
 <body>
   <main class="wrap">
@@ -83,6 +83,13 @@
           <input id="minPacketRoundingEnabled" type="checkbox" checked />
           <span>Consenti arrotondamento dei pesi</span>
         </label>
+        <h3>Riserva per ogni mittente</h3>
+        <div class="reserveInputs">
+          <label>Lance<input id="reserveSpear" class="input" type="number" min="0" step="1" value="0"></label>
+          <label>Spade<input id="reserveSword" class="input" type="number" min="0" step="1" value="0"></label>
+          <label>Cavalleria pesante<input id="reserveHeavy" class="input" type="number" min="0" step="1" value="0"></label>
+        </div>
+        <p class="hint">Unità da trattenere in ogni villaggio mittente. Il peso richiesto ai bunker indica nuovi supporti da inviare.</p>
         <label>Ordina output
           <select id="outputSort" class="input">
             <option value="player" selected>Per player</option>
@@ -93,14 +100,14 @@
       </article>
 
       <article class="card wide">
-        <div class="resultHeader"><h2>Truppe amiche</h2><button id="toggleFriendlyList" type="button" aria-expanded="true" aria-controls="friendlyVillageList">Nascondi elenco villaggi</button></div>
-        <label>Tabella truppe
-          <textarea id="troopCsv" class="input textarea mono" rows="10" placeholder="Incolla export Tribal Wars. Colonne richieste: Coords, Player, spear, sword, heavy"></textarea>
-        </label>
+        <h2>Truppe amiche</h2>
         <div class="actions">
-          <button id="loadTroopsBtn" type="button">Carica truppe</button>
+          <button id="loadTroopsBtn" type="button">Truppe proprie</button>
+          <button id="openDefensesBtn" type="button">Difese presenti</button>
+          <button id="toggleFriendlyList" type="button" aria-expanded="true" aria-controls="friendlyVillageList">Nascondi</button>
         </div>
-        <p class="hint">Dopo aver caricato la tabella, puoi attivare o disattivare i villaggi mittenti da usare nel piano. I villaggi con meno di 50 lance, meno di 50 spade e meno di 50 heavy non vengono caricati.</p>
+        <p id="troopImportStatus" class="hint">Incolla entrambi gli export per caricare i mittenti.</p>
+        <p class="hint">La tabella mostra la disponibilità stimata dopo la riserva. Attiva o disattiva i mittenti da usare nel piano.</p>
 
         <div id="friendlyVillageList">
         <div class="tableWrap">
@@ -144,13 +151,23 @@
     <section class="card" id="mapCard">
       <div class="resultHeader"><div><h2>Mappa dei villaggi</h2><p class="muted">Passa sui villaggi per leggere coordinate e truppe. Rotella per zoom, trascina per spostare la mappa.</p></div><button type="button" id="mapFit">Inquadra tutti</button></div>
       <div class="mapLegend">
-        <span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici caricati</span><span class="mapUsed">● Mittenti utilizzati</span><span class="mapBunker">◆ Bunker</span><span>○ Disattivati</span>
+        <span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">● Mittenti utilizzati: blu più scuro = più peso inviato</span><span class="mapBunker">◆ Bunker</span><span>○ Disattivati</span>
         <label><input type="checkbox" id="mapLinks" checked> Collegamenti del piano</label>
       </div>
       <p id="mapStatus" class="hint" aria-live="polite"></p>
       <div class="mapWrap"><canvas id="villageMap" aria-label="Mappa interattiva dei villaggi" tabindex="0"></canvas><div id="mapTooltip" role="status" hidden></div></div>
-      <p class="hint">Le truppe dei bunker indicano i supporti assegnati dal piano. Le truppe già presenti sono visibili soltanto se il bunker compare nell’export amico. Dopo una modifica, premi Calcola per aggiornare le assegnazioni. Su touch, tocca un villaggio per leggere i dettagli.</p>
+      <p class="hint">Le truppe dei bunker indicano i nuovi supporti assegnati dal piano. La tabella amici riporta la disponibilità stimata dopo la riserva. Dopo una modifica, premi Calcola per aggiornare le assegnazioni. Su touch, tocca un villaggio per leggere i dettagli.</p>
     </section>
+    <details class="card existingBunkers" id="existingBunkersSection">
+      <summary>Bunker esistenti</summary>
+      <p class="hint">Villaggi con difese superiori alle truppe proprie per almeno un tipo di unità. Il surplus positivo è una quantità minima di supporti ricevuti, non il totale esatto. Questa sezione non modifica il planner.</p>
+      <p id="existingBunkerStatus" class="hint" aria-live="polite"></p>
+      <div class="tableWrap existingBunkerTable"><table class="bunkerTable"><thead><tr><th>Villaggio</th><th>Player</th><th>Surplus lance</th><th>Surplus spade</th><th>Surplus cavalleria pesante</th><th>Peso surplus</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
+      <div class="resultHeader"><h3>Mappa dei bunker esistenti</h3><button id="existingMapFit" type="button">Inquadra tutti</button></div>
+      <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">● Bunker esistenti: blu più scuro = più peso del surplus</span></div>
+      <p id="existingMapStatus" class="hint" aria-live="polite"></p>
+      <div class="mapWrap"><canvas id="existingVillageMap" aria-label="Mappa dei bunker esistenti" tabindex="0"></canvas><div id="existingMapTooltip" role="status" hidden></div></div>
+    </details>
     <footer class="copyright">© Soobinize</footer>
   </main>
 
@@ -166,8 +183,25 @@
     </form>
   </dialog>
 
+  <dialog id="troopImportDialog">
+    <form method="dialog" class="dialogBox">
+      <h2>Truppe proprie</h2>
+      <textarea id="troopCsv" class="input textarea mono" rows="12" aria-label="Export truppe proprie" placeholder="Coords,Player,spear,sword,heavy"></textarea>
+      <p id="troopImportError" class="error" hidden></p>
+      <div class="actions end"><button value="cancel" type="submit">Annulla</button><button id="applyTroopsBtn" type="button">Carica</button></div>
+    </form>
+  </dialog>
+  <dialog id="defenseImportDialog">
+    <form method="dialog" class="dialogBox">
+      <h2>Difese presenti</h2>
+      <textarea id="defenseCsv" class="input textarea mono" rows="12" aria-label="Export difese presenti" placeholder="Coords,Player,spear,sword,heavy"></textarea>
+      <p id="defenseImportError" class="error" hidden></p>
+      <div class="actions end"><button value="cancel" type="submit">Annulla</button><button id="applyDefensesBtn" type="button">Carica</button></div>
+    </form>
+  </dialog>
+
   <script src="villages.js"></script>
-  <script src="app.js?v=map2"></script>
-  <script src="map.js?v=map2"></script>
+  <script src="app.js?v=bunkers2"></script>
+  <script src="map.js?v=bunkers2"></script>
 </body>
 </html>
