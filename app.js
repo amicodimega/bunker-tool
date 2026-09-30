@@ -1427,7 +1427,8 @@ function splitCsvLine(line, delimiter = ","){
   for(let i = 0; i < line.length; i += 1){
     const char = line[i];
     if(char === '"'){
-      quoted = !quoted;
+      if(quoted && line[i + 1] === '"'){ current += '"'; i += 1; }
+      else quoted = !quoted;
     }else if(char === delimiter && !quoted){
       out.push(current.trim());
       current = "";
@@ -2090,8 +2091,42 @@ async function writeClipboard(text){
   await navigator.clipboard.writeText(text);
 }
 
+function compactExport(text){
+  if(!text) return "";
+  const quote = value => `"${String(value).replace(/"/g, '""')}"`;
+  return "Coords,Player,spear,sword,heavy\n" + parseTroops(text, true)
+    .map(row => [row.coord, quote(row.player), row.spear, row.sword, row.heavy].join(",")).join("\n");
+}
+
+function getSharedSettings(){
+  const settings = getSettings();
+  const selection = settings.friendlyRows.map(row => [row.coord, row.enabled ? 1 : 0]);
+  const legacyRows = !settings.troopCsv || !settings.defenseCsv;
+  const compact = {...settings, setupFormat: 2,
+    troopCsv: compactExport(settings.troopCsv),
+    defenseCsv: compactExport(settings.defenseCsv),
+    bunkers: settings.bunkers.map(({id, ...row}) => row),
+    friendlySelection: selection};
+  delete compact.friendlyRows;
+  if(legacyRows) compact.friendlyData = settings.friendlyRows.map(({id, ...row}) => row);
+  return compact;
+}
+
+function expandSharedSettings(settings){
+  if(settings.setupFormat !== 2) return settings;
+  const selection = new Map(settings.friendlySelection || []);
+  const rows = settings.friendlyData || estimateFriendlyRows(settings.troopCsv, settings.defenseCsv);
+  const friendlyRows = rows.filter(row => selection.has(row.coord))
+    .map(row => ({...row, enabled: Boolean(selection.get(row.coord))}));
+  const result = {...settings, friendlyRows};
+  delete result.setupFormat;
+  delete result.friendlySelection;
+  delete result.friendlyData;
+  return result;
+}
+
 async function encodeSettings(){
-  const json = JSON.stringify(getSettings());
+  const json = JSON.stringify(getSharedSettings());
   if(typeof CompressionStream === "undefined") return btoa(unescape(encodeURIComponent(json)));
   const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"));
   const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
@@ -2107,12 +2142,12 @@ async function decodeSettings(text){
     const binary = atob(trimmed.slice(5).replace(/\s/g, ""));
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
     const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
-    return JSON.parse(await new Response(stream).text());
+    return expandSharedSettings(JSON.parse(await new Response(stream).text()));
   }
   try{
-    return JSON.parse(decodeURIComponent(escape(atob(trimmed))));
+    return expandSharedSettings(JSON.parse(decodeURIComponent(escape(atob(trimmed)))));
   }catch(_err){
-    return JSON.parse(trimmed);
+    return expandSharedSettings(JSON.parse(trimmed));
   }
 }
 
@@ -2129,6 +2164,19 @@ function loadSaved(){
 }
 
 function bind(){
+  document.getElementById("downloadSetupBtn").addEventListener("click", async () => {
+    const text = await encodeSettings();
+    const url = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "bunker-setup.twsetup";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  document.getElementById("setupFileInput").addEventListener("change", async event => {
+    const file = event.target.files[0];
+    if(file) els.settingsImport.value = await file.text();
+  });
   document.getElementById("existingBunkerBody").addEventListener("change", event => {
     const coord = event.target.dataset.mapCoord;
     if(!coord) return;

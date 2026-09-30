@@ -35,3 +35,5 @@ La seconda mappa mostra amici grigi e bunker esistenti in blu: più scuro indica
 Il setup condiviso usa compressione gzip con prefisso TWZ1. Il tool continua a leggere i setup precedenti in Base64 o JSON.
 
 La casella Mappa nella tabella dei bunker esistenti mostra o nasconde il villaggio nella seconda mappa. La selezione viene inclusa nel setup e non modifica il planner.
+
+Il setup compatto conserva solo le colonne necessarie degli export e ricostruisce le disponibilità senza duplicarle. Scarica setup salva un file .twsetup da condividere. Carica setup permette anche di aprire questo file.

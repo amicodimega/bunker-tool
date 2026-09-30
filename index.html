@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=visibility7" />
+  <link rel="stylesheet" href="styles.css?v=compact8" />
 </head>
 <body>
   <main class="wrap">
@@ -27,6 +27,7 @@
         </div>
         <div class="heroActions">
           <button id="copySettingsBtn" type="button">Copia setup</button>
+          <button id="downloadSetupBtn" type="button">Scarica setup</button>
           <button id="pasteSettingsBtn" type="button">Carica setup</button>
           <button id="clearBtn" type="button">Reset tutto</button>
         </div>
@@ -174,6 +175,7 @@
     <form method="dialog" class="dialogBox">
       <h2>Carica setup condiviso</h2>
       <p class="muted">Incolla un setup copiato dal tool. I nemici statici non vengono modificati.</p>
+      <label>Oppure apri un file setup<input id="setupFileInput" class="input" type="file" accept=".twsetup,.txt,.json"></label>
       <textarea id="settingsImport" class="input textarea mono" rows="10"></textarea>
       <div class="actions end">
         <button value="cancel" type="submit">Annulla</button>
@@ -200,7 +202,7 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="app.js?v=visibility7"></script>
-  <script src="map.js?v=visibility7"></script>
+  <script src="app.js?v=compact8"></script>
+  <script src="map.js?v=compact8"></script>
 </body>
 </html>
