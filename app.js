@@ -2050,6 +2050,13 @@ function loadSaved(){
 }
 
 function bind(){
+  document.getElementById("toggleFriendlyList").addEventListener("click", () => {
+    const list = document.getElementById("friendlyVillageList");
+    const button = document.getElementById("toggleFriendlyList");
+    list.hidden = !list.hidden;
+    button.textContent = list.hidden ? "Mostra elenco villaggi" : "Nascondi elenco villaggi";
+    button.setAttribute("aria-expanded", String(!list.hidden));
+  });
   document.getElementById("addBunkersBtn").addEventListener("click", addBunkersFromInput);
 
   els.bunkerTableBody.addEventListener("input", event => {

@@ -3,7 +3,7 @@
   const ctx = canvas.getContext('2d');
   const tooltip = document.getElementById('mapTooltip');
   const status = document.getElementById('mapStatus');
-  const colors = {enemy:'#c63535',friendly:'#246bb2',used:'#188453',bunker:'#8253bd'};
+  const colors = {enemy:'#c63535',friendly:'#246bb2',used:'#188453',bunker:'#e5b600'};
   let width=0, height=0, scale=1, center={x:500,y:500}, points=[], hover=null, drag=null, initialized=false;
   const num = n => Number(n || 0).toLocaleString('it-IT');
   const screen = p => ({x:width/2+(p.x-center.x)*scale,y:height/2+(p.y-center.y)*scale});
@@ -66,11 +66,11 @@
     }
     // Bunkers are drawn last so their outlines stay visible over other categories.
     for(const p of [...points].sort((a,b)=>Number(!!a.bunker)-Number(!!b.bunker))){
-      const q=screen(p),r=p===hover?7:p.bunker?6:p.friends.length?4.5:2.5;
+      const q=screen(p),r=2.5;
       const active=p.bunker?p.bunker.enabled:p.friends.length?p.friends.some(f=>f.enabled):true;
       const color=p.used?colors.used:p.friends.length?colors.friendly:p.bunker?colors.bunker:colors.enemy;
-      ctx.globalAlpha=active?1:0.4;ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(q.x,q.y,p.bunker?3:r,0,Math.PI*2);if(active)ctx.fill();else ctx.stroke();
-      if(p.bunker){ctx.strokeStyle=colors.bunker;ctx.lineWidth=p===hover?3:2;ctx.beginPath();ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x+r,q.y);ctx.lineTo(q.x,q.y+r);ctx.lineTo(q.x-r,q.y);ctx.closePath();ctx.stroke();}
+      ctx.globalAlpha=active?1:0.4;ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(q.x,q.y,r,0,Math.PI*2);if(active)ctx.fill();else ctx.stroke();
+      if(p.bunker){ctx.strokeStyle=colors.bunker;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x+r,q.y);ctx.lineTo(q.x,q.y+r);ctx.lineTo(q.x-r,q.y);ctx.closePath();ctx.stroke();}
       ctx.globalAlpha=1;
     }
     ctx.restore();

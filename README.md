@@ -9,3 +9,5 @@ Rotella: zoom. Trascinamento: spostamento. Inquadra tutti: vista completa. Passa
 I dettagli amici mostrano le truppe dell'export e i supporti assegnati. I dettagli bunker mostrano richiesta, arrivo e supporti assegnati in entrata. Le truppe già presenti nel bunker sono mostrate soltanto se quel villaggio compare nell'export amico. Modificare la configurazione cancella le assegnazioni della mappa fino al nuovo calcolo.
 
 La mappa usa canvas e non richiede servizi o librerie esterne.
+
+Aggiornamento: punti con raggio uniforme di 2,5 pixel, bunker gialli, pulsante per nascondere e mostrare l’elenco amici. Nascondere la tabella non disattiva i mittenti.
