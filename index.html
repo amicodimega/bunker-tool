@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=compact8" />
+  <link rel="stylesheet" href="styles.css?v=confirm10" />
 </head>
 <body>
   <main class="wrap">
@@ -141,10 +141,12 @@
         <div class="actions compact">
           <button id="calcBtn" type="button">Calcola</button>
           <button id="copyResultBtn" type="button">Copia risultato</button>
+          <button id="confirmAllBtn" type="button" disabled>Convalida tutto</button>
         </div>
       </div>
       <div id="errorBox" class="error" hidden></div>
       <div id="summaryBox" class="summary"></div>
+      <p id="confirmedStatus" class="hint" aria-live="polite"></p>
       <div id="warningsBox" class="warnings" hidden></div>
       <textarea id="resultBox" class="output mono" rows="18" readonly></textarea>
     </section>
@@ -202,7 +204,7 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="app.js?v=compact8"></script>
-  <script src="map.js?v=compact8"></script>
+  <script src="app.js?v=confirm10"></script>
+  <script src="map.js?v=confirm10"></script>
 </body>
 </html>

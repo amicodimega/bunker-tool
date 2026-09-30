@@ -130,6 +130,7 @@ function createVillageMap(existingMode = false) {
 const refreshPlannerMap = createVillageMap();
 const refreshExistingBunkerMap = createVillageMap(true);
 window.refreshVillageMap = () => {
+  updateConfirmationState();
   renderExistingBunkers();
   refreshPlannerMap();
   refreshExistingBunkerMap();

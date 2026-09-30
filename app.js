@@ -1358,6 +1358,8 @@ let mapPlanReady = false;
 let importedTroops = "";
 let importedDefenses = "";
 let hiddenExistingBunkers = new Set();
+let confirmedSent = {};
+let planSnapshot = "";
 
 function parseCoords(text){
   const found = [];
@@ -1599,6 +1601,7 @@ function getSettings(){
     troopCsv: importedTroops,
     defenseCsv: importedDefenses,
     hiddenExistingBunkers: [...hiddenExistingBunkers],
+    confirmedSent: JSON.parse(JSON.stringify(confirmedSent)),
     reserveSpear: document.getElementById("reserveSpear").value,
     reserveSword: document.getElementById("reserveSword").value,
     reserveHeavy: document.getElementById("reserveHeavy").value,
@@ -1610,6 +1613,11 @@ function getSettings(){
 }
 
 function setSettings(settings){
+  confirmedSent = {};
+  for(const [coord, units] of Object.entries(settings.confirmedSent || {})){
+    if(!parseCoords(coord).length) continue;
+    confirmedSent[coord] = Object.fromEntries(["spear", "sword", "heavy"].map(unit => [unit, Math.max(0, Math.trunc(Number(units[unit]) || 0))]));
+  }
   if(settings.worldSpeed !== undefined && settings.worldSpeed !== "") els.worldSpeed.value = settings.worldSpeed;
   if(settings.unitSpeed !== undefined && settings.unitSpeed !== "") els.unitSpeed.value = settings.unitSpeed;
   if(settings.defaultBunkerTarget !== undefined) els.defaultBunkerTarget.value = settings.defaultBunkerTarget;
@@ -1747,7 +1755,7 @@ function applyTroopExport(kind){
 function getSendableSource(row){
   const result = {...row};
   for(const [unit, id] of [["spear", "reserveSpear"], ["sword", "reserveSword"], ["heavy", "reserveHeavy"]]){
-    result[unit] = Math.max(0, row[unit] - Math.max(0, Math.trunc(Number(document.getElementById(id).value) || 0)));
+    result[unit] = Math.max(0, row[unit] - (confirmedSent[row.coord]?.[unit] || 0) - Math.max(0, Math.trunc(Number(document.getElementById(id).value) || 0)));
   }
   result.weight = availableWeight(result);
   return result;
@@ -1762,6 +1770,7 @@ function getActiveBunkers(){
     const coords = parseCoords(row.coord)[0];
     return {
       ...coords,
+      id: row.id,
       target: Number(row.target),
       arrival: parseDateTime(row.arrival),
       arrivalText: row.arrival,
@@ -2005,6 +2014,7 @@ function buildPlan(){
       bunkerCommands.push({
         sourceCoord: source.coord,
         bunkerCoord: bunker.coord,
+        bunkerId: bunker.id,
         player: source.player || "unknown player",
         send,
         sentWeight: planWeight,
@@ -2075,6 +2085,7 @@ function calculate(){
     showWarnings(plan.warnings);
     mapCommands = plan.commands;
     mapPlanReady = true;
+    planSnapshot = JSON.stringify(getSettings());
     window.refreshVillageMap?.();
   }catch(err){
     mapCommands = [];
@@ -2085,6 +2096,46 @@ function calculate(){
     showWarnings([]);
     showError(err.message);
   }
+}
+
+function updateConfirmationState(){
+  document.getElementById("confirmAllBtn").disabled = !mapPlanReady || !mapCommands.length;
+  const totals = Object.values(confirmedSent).reduce((sum, row) => {
+    for(const unit of ["spear", "sword", "heavy"]) sum[unit] += row[unit];
+    return sum;
+  }, {spear:0, sword:0, heavy:0});
+  const weight = availableWeight(totals);
+  document.getElementById("confirmedStatus").textContent = weight > 0
+    ? `Invii convalidati: ${totals.spear.toLocaleString("it-IT")} lance, ${totals.sword.toLocaleString("it-IT")} spade, ${totals.heavy.toLocaleString("it-IT")} cavallerie pesanti.` : "";
+}
+
+function confirmAllCommands(){
+  if(!mapPlanReady || !mapCommands.length) return;
+  if(planSnapshot !== JSON.stringify(getSettings())){
+    persist();
+    showError("La configurazione è cambiata. Premi Calcola prima di convalidare.");
+    return;
+  }
+  const commands = mapCommands.slice();
+  const assigned = new Map();
+  for(const command of commands){
+    const units = confirmedSent[command.sourceCoord] ||= {spear:0,sword:0,heavy:0};
+    for(const unit of ["spear", "sword", "heavy"]) units[unit] += command.send[unit];
+    assigned.set(command.bunkerId, (assigned.get(command.bunkerId) || 0) + command.sentWeight);
+  }
+  for(const bunker of bunkerRows){
+    if(!assigned.has(bunker.id)) continue;
+    bunker.target = String(Math.max(0, Number(bunker.target) - assigned.get(bunker.id)));
+    if(Number(bunker.target) === 0) bunker.enabled = false;
+  }
+  renderBunkerTable();
+  renderTroopTable();
+  persist();
+  els.resultBox.value = "";
+  els.summaryBox.textContent = `${commands.length} invii convalidati. Disponibilità aggiornate.`;
+  showWarnings([]);
+  clearError();
+  updateConfirmationState();
 }
 
 async function writeClipboard(text){
@@ -2100,19 +2151,64 @@ function compactExport(text){
 
 function getSharedSettings(){
   const settings = getSettings();
-  const selection = settings.friendlyRows.map(row => [row.coord, row.enabled ? 1 : 0]);
-  const legacyRows = !settings.troopCsv || !settings.defenseCsv;
-  const compact = {...settings, setupFormat: 2,
-    troopCsv: compactExport(settings.troopCsv),
-    defenseCsv: compactExport(settings.defenseCsv),
-    bunkers: settings.bunkers.map(({id, ...row}) => row),
-    friendlySelection: selection};
-  delete compact.friendlyRows;
-  if(legacyRows) compact.friendlyData = settings.friendlyRows.map(({id, ...row}) => row);
-  return compact;
+  if(!settings.troopCsv || !settings.defenseCsv){
+    return {...settings, bunkers: settings.bunkers.map(({id, ...row}) => row),
+      friendlyRows: settings.friendlyRows.map(({id, ...row}) => row)};
+  }
+  const own = new Map(parseTroops(settings.troopCsv, true).map(row => [row.coord, row]));
+  const defenses = new Map(parseTroops(settings.defenseCsv, true).map(row => [row.coord, row]));
+  const players = [], playerIds = new Map();
+  const playerId = name => {
+    if(!playerIds.has(name)){playerIds.set(name, players.length); players.push(name);}
+    return playerIds.get(name);
+  };
+  const packedCoord = coord => {const [x,y] = coord.split("|").map(Number);return x * 1000 + y;};
+  const villages = [...new Set([...own.keys(), ...defenses.keys()])].map(coord => {
+    const troop = own.get(coord), defense = defenses.get(coord);
+    const base = [troop?.spear || 0, troop?.sword || 0, troop?.heavy || 0];
+    const row = [packedCoord(coord), troop ? playerId(troop.player) : -1, ...base];
+    if(!defense){row.push(null);return row;}
+    const delta = [defense.spear-base[0], defense.sword-base[1], defense.heavy-base[2]];
+    if(delta.some(n=>n!==0) || !troop || defense.player!==troop.player){
+      row.push(...delta);
+      if(!troop || defense.player!==troop.player) row.push(playerId(defense.player));
+    }
+    return row;
+  });
+  const selected = new Set(settings.friendlyRows.map(row=>row.coord));
+  const possible = estimateFriendlyRows(settings.troopCsv, settings.defenseCsv);
+  const result = {...settings, setupFormat:3, players, villages,
+    disabled: settings.friendlyRows.filter(row=>!row.enabled).map(row=>packedCoord(row.coord)),
+    removed: possible.filter(row=>!selected.has(row.coord)).map(row=>packedCoord(row.coord)),
+    bunkers: settings.bunkers.map(({id, ...row}) => row)};
+  delete result.troopCsv;
+  delete result.defenseCsv;
+  delete result.friendlyRows;
+  return result;
 }
 
 function expandSharedSettings(settings){
+  if(settings.setupFormat === 3){
+    const coord = value => `${Math.floor(value/1000)}|${value%1000}`;
+    const quote = value => `"${String(value).replace(/"/g, '""')}"`;
+    const own = [], defense = [];
+    for(const row of settings.villages){
+      const c = coord(row[0]), units = row.slice(2,5);
+      if(row[1] >= 0) own.push([c, quote(settings.players[row[1]]), ...units].join(","));
+      if(row[5] !== null){
+        const pid = row[8] ?? row[1];
+        defense.push([c, quote(settings.players[pid]), ...units.map((n,i)=>n+(row[5+i] || 0))].join(","));
+      }
+    }
+    const header = "Coords,Player,spear,sword,heavy\n";
+    const troopCsv = header + own.join("\n"), defenseCsv = header + defense.join("\n");
+    const disabled = new Set((settings.disabled || []).map(coord)), removed = new Set((settings.removed || []).map(coord));
+    const friendlyRows = estimateFriendlyRows(troopCsv, defenseCsv).filter(row=>!removed.has(row.coord))
+      .map(row=>({...row, enabled:!disabled.has(row.coord)}));
+    const result = {...settings, troopCsv, defenseCsv, friendlyRows};
+    for(const key of ["setupFormat", "players", "villages", "disabled", "removed"]) delete result[key];
+    return result;
+  }
   if(settings.setupFormat !== 2) return settings;
   const selection = new Map(settings.friendlySelection || []);
   const rows = settings.friendlyData || estimateFriendlyRows(settings.troopCsv, settings.defenseCsv);
@@ -2164,6 +2260,7 @@ function loadSaved(){
 }
 
 function bind(){
+  document.getElementById("confirmAllBtn").addEventListener("click", confirmAllCommands);
   document.getElementById("downloadSetupBtn").addEventListener("click", async () => {
     const text = await encodeSettings();
     const url = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
