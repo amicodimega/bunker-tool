@@ -312,7 +312,7 @@ dialog{
 
 #friendlyVillageList[hidden]{display:none}
 
-.reserveInputs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.reserveInputs label{font-size:13px}
+.reserveInputs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.reserveInputs label{font-size:13px}
 
 .existingBunkers summary{font-size:18px;font-weight:600;cursor:pointer}.existingBunkerTable{max-height:360px;overflow:auto;margin:16px 0}.existingBunkerTable th{position:sticky;top:0;background:#f1f5f9}
 

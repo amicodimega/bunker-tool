@@ -39,3 +39,5 @@ La casella Mappa nella tabella dei bunker esistenti mostra o nasconde il villagg
 Il setup compatto conserva solo le colonne necessarie degli export e ricostruisce le disponibilità senza duplicarle. Scarica setup salva un file .twsetup da condividere. Carica setup permette anche di aprire questo file.
 
 Convalida tutto registra gli invii del piano corrente come partiti e sottrae le unità effettive dalle disponibilità nei piani successivi. Riduce le quantità ancora da inviare ai bunker e disattiva quelli completati. Il piano viene svuotato dopo la convalida per evitare duplicazioni. Le convalide sono incluse nel setup. Non è previsto Annulla convalida. Reset tutto azzera anche le convalide.
+
+Arcieri: importazione dalla colonna archer, peso 1, riserva, invii, convalida, supporti e tooltip. I setup precedenti restano caricabili. Coordinate nemiche aggiornate a 1.823 villaggi.

@@ -9,9 +9,9 @@ function createVillageMap(existingMode = false) {
   const screen = p => ({x:width/2+(p.x-center.x)*scale,y:height/2+(p.y-center.y)*scale});
   const world = p => ({x:center.x+(p.x-width/2)/scale,y:center.y+(p.y-height/2)/scale});
   function units(commands) {
-    return commands.reduce((sum,c)=>{for(const u of ['spear','sword','heavy'])sum[u]+=c.send[u];return sum;},{spear:0,sword:0,heavy:0});
+    return commands.reduce((sum,c)=>{for(const u of ['spear','sword','archer','heavy'])sum[u]+=c.send[u];return sum;},{spear:0,sword:0,archer:0,heavy:0});
   }
-  function troops(t){return `Lance: ${num(t.spear)}\nSpade: ${num(t.sword)}\nCavalleria pesante: ${num(t.heavy)}`;}
+  function troops(t){return `Lance: ${num(t.spear)}\nSpade: ${num(t.sword)}\nArcieri: ${num(t.archer)}\nCavalleria pesante: ${num(t.heavy)}`;}
   function blue(weight){
     const t = Math.sqrt(Math.max(0, weight) / maxWeight);
     const light=[56,155,255], dark=[0,70,210];
