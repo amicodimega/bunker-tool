@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=filters14" />
+  <link rel="stylesheet" href="styles.css?v=density15" />
 </head>
 <body>
   <main class="wrap">
@@ -73,6 +73,10 @@
 
       <article class="card">
         <h2>Regole</h2>
+        <label>Raggio densità nemica (campi)
+          <input id="enemyDensityRadius" class="input" type="number" min="1" step="1" value="10" />
+        </label>
+        <p class="hint">I villaggi nemici isolati pesano meno nella scelta dei mittenti.</p>
         <label class="checkRow">
           <input id="minPacketEnabled" type="checkbox" />
           <span>Usa peso minimo per comando</span>
@@ -208,8 +212,8 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="table-tools.js?v=filters14"></script>
-  <script src="app.js?v=filters14"></script>
-  <script src="map.js?v=filters14"></script>
+  <script src="table-tools.js?v=density15"></script>
+  <script src="app.js?v=density15"></script>
+  <script src="map.js?v=density15"></script>
 </body>
 </html>
