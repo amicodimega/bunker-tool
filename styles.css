@@ -317,3 +317,15 @@ dialog{
 .existingBunkers summary{font-size:18px;font-weight:600;cursor:pointer}.existingBunkerTable{max-height:360px;overflow:auto;margin:16px 0}.existingBunkerTable th{position:sticky;top:0;background:#f1f5f9}
 
 .friendlySection summary{font-size:18px;font-weight:600;cursor:pointer}.friendlySection[open] summary{margin-bottom:16px}
+
+.tableToolsStatus{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0;color:#64748b;font-size:13px}
+.tableToolsStatus button{padding:5px 10px;font-size:12px}
+.columnMenuTrigger{border:0;background:transparent;box-shadow:none;color:inherit;padding:6px 0;text-align:left;font:inherit;white-space:nowrap;border-radius:4px}
+.columnMenuTrigger:hover,.columnMenuTrigger.filterActive{background:#e8f1ff;color:#004a86}
+.columnMenuTrigger:focus-visible{outline:2px solid #004a86;outline-offset:3px}
+.columnMenu{width:min(430px,calc(100vw - 32px));max-height:85vh;overflow:auto;border:1px solid #cbd5e1;border-radius:16px;padding:22px;color:#172238;background:#fff;box-shadow:0 16px 50px #0f172a33}
+.columnMenu::backdrop{background:#0f172a66}
+.columnMenu h3{margin:0 0 16px}.columnMenu label{display:block;margin:12px 0}.columnMenu label[hidden]{display:none}
+.columnMenuActions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.columnMenuActions button{font-size:13px;padding:9px 12px}
+.playerFilterList{max-height:250px;overflow:auto;border:1px solid #d7e0eb;border-radius:8px;padding:8px}
+.playerFilterList label{display:flex;align-items:center;gap:10px;padding:5px;margin:0;font-weight:400}.playerFilterList input{width:auto;margin:0}

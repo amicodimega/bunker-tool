@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=archer11" />
+  <link rel="stylesheet" href="styles.css?v=filters12" />
 </head>
 <body>
   <main class="wrap">
@@ -74,14 +74,14 @@
       <article class="card">
         <h2>Regole</h2>
         <label class="checkRow">
-          <input id="minPacketEnabled" type="checkbox" checked />
+          <input id="minPacketEnabled" type="checkbox" />
           <span>Usa peso minimo per comando</span>
         </label>
         <label>Peso minimo comando
           <input id="minPacketWeight" class="input" type="number" min="1" step="1" value="1000" />
         </label>
         <label class="checkRow">
-          <input id="minPacketRoundingEnabled" type="checkbox" checked />
+          <input id="minPacketRoundingEnabled" type="checkbox" />
           <span>Consenti arrotondamento dei pesi</span>
         </label>
         <h3>Riserva per ogni mittente</h3>
@@ -111,8 +111,9 @@
         <p class="hint">La tabella mostra le truppe disponibili. Attiva o disattiva i mittenti da usare nel piano.</p>
 
         <div id="friendlyVillageList">
+        <div id="friendlyTableStatus" class="tableToolsStatus"></div>
         <div class="tableWrap">
-          <table class="bunkerTable troopTable">
+          <table id="friendlyTable" class="bunkerTable troopTable">
             <thead>
               <tr>
                 <th>Attivo</th>
@@ -166,7 +167,8 @@
       <summary>Bunker esistenti</summary>
       <p class="hint">Villaggi con supporti presenti. Deseleziona Mappa per nascondere un villaggio.</p>
       <p id="existingBunkerStatus" class="hint" aria-live="polite"></p>
-      <div class="tableWrap existingBunkerTable"><table class="bunkerTable"><thead><tr><th>Mappa</th><th>Villaggio</th><th>Player</th><th>Lance in supporto</th><th>Spade in supporto</th><th>Arcieri in supporto</th><th>Cavalleria pesante in supporto</th><th>Peso supporti</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
+      <div id="existingTableStatus" class="tableToolsStatus"></div>
+      <div class="tableWrap existingBunkerTable"><table id="existingTable" class="bunkerTable"><thead><tr><th>Mappa</th><th>Villaggio</th><th>Player</th><th>Lance in supporto</th><th>Spade in supporto</th><th>Arcieri in supporto</th><th>Cavalleria pesante in supporto</th><th>Peso supporti</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
       <div class="resultHeader"><h3>Mappa dei bunker esistenti</h3><button id="existingMapFit" type="button">Inquadra tutti</button></div>
       <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">● Bunker esistenti: blu più scuro = più supporti</span></div>
       <p id="existingMapStatus" class="hint" aria-live="polite"></p>
@@ -206,7 +208,8 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="app.js?v=archer11"></script>
-  <script src="map.js?v=archer11"></script>
+  <script src="table-tools.js?v=filters12"></script>
+  <script src="app.js?v=filters12"></script>
+  <script src="map.js?v=filters12"></script>
 </body>
 </html>

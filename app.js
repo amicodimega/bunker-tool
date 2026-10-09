@@ -2207,15 +2207,19 @@ function normalizeFriendlyRows(rows){
   }).filter(Boolean);
 }
 
-function renderTroopTable(){
-  mapCommands = [];
-  mapPlanReady = false;
-  window.refreshVillageMap?.();
+function renderTroopTable(preservePlan = false){
+  if(!preservePlan){
+    mapCommands = [];
+    mapPlanReady = false;
+    window.refreshVillageMap?.();
+  }
   els.troopTableBody.innerHTML = "";
   els.emptyTroopHint.hidden = friendlyRows.length > 0;
 
-  for(const original of friendlyRows){
-    const row = getSendableSource(original);
+  const availableRows = friendlyRows.map(getSendableSource);
+  const visibleRows = window.tableTools?.apply("friendly", availableRows) || availableRows;
+  window.tableTools?.update("friendly", availableRows, visibleRows);
+  for(const row of visibleRows){
     const tr = document.createElement("tr");
     tr.dataset.id = row.id;
 
@@ -2786,9 +2790,9 @@ function loadSaved(){
   setSettings({
     worldSpeed: 1,
     unitSpeed: 1,
-    minPacketEnabled: true,
+    minPacketEnabled: false,
     minPacketWeight: 1000,
-    minPacketRoundingEnabled: true,
+    minPacketRoundingEnabled: false,
     outputSort: "player",
     friendlyRows: []
   });
@@ -2903,6 +2907,7 @@ function bind(){
   });
   document.getElementById("clearBtn").addEventListener("click", () => {
     if(!confirm("Vuoi davvero cancellare tutta la configurazione?")) return;
+    window.tableTools?.resetAll();
     bunkerRows = [];
     friendlyRows = [];
     setSettings({
@@ -2912,9 +2917,9 @@ function bind(){
       defaultBunkerArrival: "",
       outputSort: "player",
       troopCsv: "",
-      minPacketEnabled: true,
+      minPacketEnabled: false,
       minPacketWeight: 1000,
-      minPacketRoundingEnabled: true,
+      minPacketRoundingEnabled: false,
       bunkers: [],
       friendlyRows: []
     });
@@ -2947,7 +2952,9 @@ function getExistingBunkers(){
 }
 
 function renderExistingBunkers(){
-  const rows = getExistingBunkers();
+  const allRows = getExistingBunkers();
+  const rows = window.tableTools?.apply("existing", allRows) || allRows;
+  window.tableTools?.update("existing", allRows, rows);
   const body = document.getElementById("existingBunkerBody");
   body.replaceChildren();
   for(const row of rows){
@@ -2968,6 +2975,6 @@ function renderExistingBunkers(){
     body.appendChild(tr);
   }
   document.getElementById("existingBunkerStatus").textContent = importedTroops && importedDefenses
-    ? `${rows.length} bunker esistenti. Peso supporti: ${rows.reduce((n,row) => n + row.surplusWeight, 0).toLocaleString("it-IT")}.`
+    ? `${allRows.length} bunker esistenti. Peso supporti: ${allRows.reduce((n,row) => n + row.surplusWeight, 0).toLocaleString("it-IT")}.`
     : "Carica entrambi gli export nella sezione Truppe amiche.";
 }

@@ -41,3 +41,5 @@ Il setup compatto conserva solo le colonne necessarie degli export e ricostruisc
 Convalida tutto registra gli invii del piano corrente come partiti e sottrae le unità effettive dalle disponibilità nei piani successivi. Riduce le quantità ancora da inviare ai bunker e disattiva quelli completati. Il piano viene svuotato dopo la convalida per evitare duplicazioni. Le convalide sono incluse nel setup. Non è previsto Annulla convalida. Reset tutto azzera anche le convalide.
 
 Arcieri: importazione dalla colonna archer, peso 1, riserva, invii, convalida, supporti e tooltip. I setup precedenti restano caricabili. Coordinate nemiche aggiornate a 1.823 villaggi.
+
+Tabelle: menu nelle intestazioni per ordinare, selezionare player, filtrare coordinate e applicare confronti numerici combinati. I filtri riguardano le righe mostrate nelle tabelle. Le caselle Attivo e Mappa conservano le loro funzioni. Regole predefinite: peso minimo disattivato, soglia 1000, arrotondamento disattivato, riserve 0, output per player.
