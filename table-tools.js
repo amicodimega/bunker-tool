@@ -113,10 +113,10 @@
     } else {
       const label = element('label', 'Mostra valori', form);
       const mode = element('select', undefined, label); mode.className = 'input';
-      for(const [v, t] of [['all','Tutti'],['gt','Maggiore di'],['gte','Maggiore o uguale a'],['lt','Minore di'],['lte','Minore o uguale a'],['eq','Uguale a'],['between','Compreso tra']]) {
+      for(const [v, t] of [['between','Compreso tra'],['lte','Minore o uguale a'],['gte','Maggiore o uguale a']]) {
         const option = element('option', t, mode); option.value = v;
       }
-      mode.value = filter?.mode || 'all';
+      mode.value = filter?.mode || 'between';
       const first = element('label', 'Valore', form);
       const input = element('input', undefined, first); input.className = 'input'; input.type = 'number'; input.min = '0'; input.step = '1'; input.value = filter?.number ?? '';
       const second = element('label', 'Fino a', form);
