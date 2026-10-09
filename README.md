@@ -45,4 +45,6 @@ Arcieri: importazione dalla colonna archer, peso 1, riserva, invii, convalida, s
 Tabelle: menu nelle intestazioni per ordinare, selezionare player, filtrare coordinate e applicare confronti numerici combinati. I filtri riguardano le righe mostrate nelle tabelle. Le caselle Attivo e Mappa conservano le loro funzioni. Regole predefinite: peso minimo disattivato, soglia 1000, arrotondamento disattivato, riserve 0, output per player.
 
 
-Priorità: distanza dal nemico considerato più vicino. Le 18 coordinate indicate manualmente sono escluse dal calcolo e visibili in rosso chiaro nelle mappe.
+Priorità: distanza dal nemico considerato più vicino. Le 19 coordinate indicate manualmente sono escluse dal calcolo e visibili in rosso chiaro nelle mappe.
+
+Seleziona visibili e Deseleziona visibili agiscono solo sui mittenti mostrati dai filtri. Il piano usa solo i mittenti attivi. Le modifiche alla selezione cancellano il piano precedente.

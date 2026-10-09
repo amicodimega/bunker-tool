@@ -1954,7 +1954,7 @@ function minDistanceToEnemies(village,enemies){
   return Math.min(...enemies.map(enemy => distance(village, enemy)));
 }
 
-const EXCLUDED_ENEMY_VILLAGES = new Set(["434|478", "433|477", "433|473", "443|458", "443|459", "442|460", "442|458", "442|457", "442|455", "439|459", "443|471", "443|472", "441|470", "439|470", "439|469", "438|471", "436|470", "436|472"]);
+const EXCLUDED_ENEMY_VILLAGES = new Set(["434|478", "433|477", "433|473", "443|458", "443|459", "442|460", "442|458", "442|457", "442|455", "439|459", "443|471", "443|472", "441|470", "439|470", "439|469", "438|471", "436|470", "436|472", "470|550"]);
 
 function travelSeconds(from,to,unit,speed,unitSpeed,supportSlowdownPercent = 0){
   const fields = distance(from,to);
@@ -2348,6 +2348,15 @@ function getSendableSource(row){
   }
   result.weight = availableWeight(result);
   return result;
+}
+
+function invalidateFriendlyPlan(){
+  els.resultBox.value = "";
+  els.summaryBox.textContent = "";
+  showWarnings([]);
+  planSnapshot = "";
+  renderTroopTable();
+  persist();
 }
 
 function getActiveFriendlySources(){
@@ -2926,8 +2935,10 @@ function bind(){
     if(!tr) return;
     const row = friendlyRows.find(item => item.id === tr.dataset.id);
     if(!row) return;
-    if(event.target.dataset.field === "enabled") row.enabled = event.target.checked;
-    persist();
+    if(event.target.dataset.field === "enabled"){
+      row.enabled = event.target.checked;
+      invalidateFriendlyPlan();
+    }
   });
 
   els.troopTableBody.addEventListener("click", event => {
