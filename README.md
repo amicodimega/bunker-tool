@@ -44,4 +44,5 @@ Arcieri: importazione dalla colonna archer, peso 1, riserva, invii, convalida, s
 
 Tabelle: menu nelle intestazioni per ordinare, selezionare player, filtrare coordinate e applicare confronti numerici combinati. I filtri riguardano le righe mostrate nelle tabelle. Le caselle Attivo e Mappa conservano le loro funzioni. Regole predefinite: peso minimo disattivato, soglia 1000, arrotondamento disattivato, riserve 0, output per player.
 
-Densità nemica: raggio predefinito 10 campi, modificabile nelle Regole e incluso nei setup. Per ogni nemico la densità somma (1-d/r)^2 per gli altri nemici entro il raggio. Peso 0.1 + 0.9*densità/(densità+mediana delle densità positive). La priorità usa la minima distanza/peso, in ordine decrescente. La distanza reale resta nell'output. Confrontati raggi 5, 10, 15, 20 sulle 1875 coordinate. A 10 campi la mediana dei vicini è 14 per x<490 e 63 per x>530. Il raggio è una scelta empirica regolabile, non una soglia validata sul rischio effettivo di attacco.
+
+Priorità: distanza dal nemico considerato più vicino. Le 18 coordinate indicate manualmente sono escluse dal calcolo e visibili in rosso chiaro nelle mappe.

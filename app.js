@@ -1954,28 +1954,7 @@ function minDistanceToEnemies(village,enemies){
   return Math.min(...enemies.map(enemy => distance(village, enemy)));
 }
 
-function weightEnemyVillages(enemies, radius){
-  const densities = enemies.map(() => 0);
-  for(let i = 0; i < enemies.length; i++){
-    for(let j = i + 1; j < enemies.length; j++){
-      const d = distance(enemies[i], enemies[j]);
-      if(d >= radius) continue;
-      const contribution = (1 - d / radius) ** 2;
-      densities[i] += contribution;
-      densities[j] += contribution;
-    }
-  }
-  const positive = densities.filter(n => n > 0).sort((a,b) => a-b);
-  const middle = Math.floor(positive.length / 2);
-  const reference = positive.length ? (positive.length % 2 ? positive[middle] : (positive[middle-1] + positive[middle]) / 2) : 1;
-  return enemies.map((enemy,i) => ({...enemy, density: densities[i], enemyWeight: 0.1 + 0.9 * densities[i] / (densities[i] + reference)}));
-}
-
-function weightedEnemyDistance(village, enemies){
-  let nearest = Infinity;
-  for(const enemy of enemies) nearest = Math.min(nearest, distance(village, enemy) / enemy.enemyWeight);
-  return Number.isFinite(nearest) ? nearest : 0;
-}
+const EXCLUDED_ENEMY_VILLAGES = new Set(["434|478", "433|477", "433|473", "443|458", "443|459", "442|460", "442|458", "442|457", "442|455", "439|459", "443|471", "443|472", "441|470", "439|470", "439|469", "438|471", "436|470", "436|472"]);
 
 function travelSeconds(from,to,unit,speed,unitSpeed,supportSlowdownPercent = 0){
   const fields = distance(from,to);
@@ -2199,7 +2178,6 @@ function getSettings(){
     bunkers: bunkerRows.map(row => ({ ...row })),
     maxSenderPerBunker: "",
     outputSort: els.outputSort.value,
-    enemyDensityRadius: Number(document.getElementById("enemyDensityRadius").value),
     troopCsv: importedTroops,
     defenseCsv: importedDefenses,
     hiddenExistingBunkers: [...hiddenExistingBunkers],
@@ -2227,7 +2205,6 @@ function setSettings(settings){
   if(settings.defaultBunkerArrival !== undefined) els.defaultBunkerArrival.value = settings.defaultBunkerArrival;
   if(settings.bunkers !== undefined) bunkerRows = normalizeBunkers(settings.bunkers);
   if(settings.outputSort !== undefined) els.outputSort.value = settings.outputSort;
-  document.getElementById("enemyDensityRadius").value = settings.enemyDensityRadius ?? 10;
   if(settings.troopCsv !== undefined) { importedTroops = settings.troopCsv; els.troopCsv.value = importedTroops; }
   importedDefenses = settings.defenseCsv || "";
   hiddenExistingBunkers = new Set(Array.isArray(settings.hiddenExistingBunkers) ? settings.hiddenExistingBunkers : []);
@@ -2469,7 +2446,7 @@ function validate(settings,bunkers,enemies,sources){
 
 function sortSourcesForBunker(sources,bunker){
   return sources.slice().sort((a,b) => {
-    const enemySort = b.weightedEnemyDistance - a.weightedEnemyDistance;
+    const enemySort = b.enemyDistance - a.enemyDistance;
     if(enemySort) return enemySort;
 
     const bunkerSort = distance(b,bunker) - distance(a,bunker);
@@ -2541,10 +2518,7 @@ function formatUnitCommands(commands){
 
 function buildPlan(){
   const settings = getSettings();
-  const rawEnemies = parseCoords(STATIC_ENEMY_VILLAGES.join("\n"));
-  const radius = settings.enemyDensityRadius;
-  if(!Number.isFinite(radius) || radius <= 0) throw new Error("Il raggio della densità nemica deve essere maggiore di zero.");
-  const enemies = weightEnemyVillages(rawEnemies, radius);
+  const enemies = parseCoords(STATIC_ENEMY_VILLAGES.join("\n")).filter(enemy => !EXCLUDED_ENEMY_VILLAGES.has(enemy.coord));
   const bunkers = getActiveBunkers();
   const minPacket = settings.minPacketEnabled ? Math.round(Number(settings.minPacketWeight)) : 1;
   const roundingEnabled = Boolean(settings.minPacketRoundingEnabled);
@@ -2552,8 +2526,7 @@ function buildPlan(){
 
   sources = sources.map(source => ({
     ...source,
-    enemyDistance: minDistanceToEnemies(source,enemies),
-    weightedEnemyDistance: weightedEnemyDistance(source,enemies)
+    enemyDistance: minDistanceToEnemies(source,enemies)
   }));
 
   validate(settings,bunkers,enemies,sources);
@@ -3011,7 +2984,7 @@ function bind(){
     clearError();
   });
 
-  for(const element of [document.getElementById("enemyDensityRadius"),els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.outputSort,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled]){
+  for(const element of [els.worldSpeed,els.unitSpeed,els.defaultBunkerTarget,els.defaultBunkerArrival,els.outputSort,els.minPacketEnabled,els.minPacketWeight,els.minPacketRoundingEnabled]){
     element.addEventListener("input", persist);
   }
 }

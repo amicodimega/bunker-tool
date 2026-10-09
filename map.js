@@ -20,13 +20,13 @@ function createVillageMap(existingMode = false) {
   function details(p){
     if(existingMode){
       const parts=[p.coord];
-      if(p.enemy) parts.push('Villaggio nemico');
+      if(p.enemy) parts.push(p.excludedEnemy ? 'Villaggio nemico escluso dal calcolo' : 'Villaggio nemico');
       if(p.friends.length) parts.push(`${p.friends[0].player || "Player non indicato"}`);
       if(p.existing) parts.push(`Supporti presenti\n${troops(p.existing.surplus)}\nPeso supporti: ${num(p.existing.surplusWeight)}`, `Difese totali presenti\n${troops(p.existing)}\nPeso difese totali: ${num(p.existing.weight)}`);
       return parts.join('\n\n');
     }
     const parts=[p.coord];
-    if(p.enemy)parts.push('Villaggio nemico');
+    if(p.enemy)parts.push(p.excludedEnemy ? 'Villaggio nemico escluso dal calcolo' : 'Villaggio nemico');
     if(p.friends.length){
       for(const f of p.friends)parts.push(`${f.player || 'Player non indicato'}${f.enabled?'':' (disattivato)'}\n${f.estimated ? "Truppe disponibili" : "Truppe proprie importate"}\n${troops(f.estimated ? getSendableSource(f) : f)}\n${f.estimated ? "Peso disponibile" : "Peso truppe proprie"}: ${num(f.estimated ? getSendableSource(f).weight : f.weight)}`);
       const outgoing=mapCommands.filter(c=>c.sourceCoord===p.coord);
@@ -43,7 +43,7 @@ function createVillageMap(existingMode = false) {
   function rebuild(){
     const entries=new Map();
     function add(coord){if(!entries.has(coord)){const p=parseCoords(coord)[0];if(!p)return null;entries.set(coord,{...p,friends:[],enemy:false,bunker:null});}return entries.get(coord);}
-    for(const e of parseCoords(STATIC_ENEMY_VILLAGES.join('\n')))add(e.coord).enemy=true;
+    for(const e of parseCoords(STATIC_ENEMY_VILLAGES.join('\n'))){const p=add(e.coord);p.enemy=true;p.excludedEnemy=EXCLUDED_ENEMY_VILLAGES.has(e.coord);}
     const friendByCoord = new Map();
     if(importedTroops) for(const f of parseTroops(importedTroops, true)) friendByCoord.set(f.coord, {...f, estimated: false});
     for(const f of friendlyRows) friendByCoord.set(f.coord, {...f, estimated: true});
@@ -59,7 +59,7 @@ function createVillageMap(existingMode = false) {
     points=[...entries.values()].map(p=>({...p,used:existingMode?!!p.existing:used.has(p.coord), displayWeight:existingMode?(p.existing?.surplusWeight || 0):(weights.get(p.coord) || 0)}));
     maxWeight=Math.max(1,...points.map(p=>p.displayWeight));
     hover=null;tooltip.hidden=true;
-    status.textContent=existingMode ? `${existing.length} bunker esistenti · ${friendByCoord.size} villaggi amici` : `${points.filter(p=>p.enemy).length} nemici · ${friendlyRows.length} amici caricati · ${used.size} mittenti utilizzati · ${bunkerRows.length} bunker${mapPlanReady?' · Piano calcolato':' · Nessuna assegnazione calcolata'}`;
+    status.textContent=existingMode ? `${existing.length} bunker esistenti · ${friendByCoord.size} villaggi amici` : `${points.filter(p=>p.enemy && !p.excludedEnemy).length} nemici considerati · ${points.filter(p=>p.excludedEnemy).length} esclusi · ${friendlyRows.length} amici caricati · ${used.size} mittenti utilizzati · ${bunkerRows.length} bunker${mapPlanReady?' · Piano calcolato':' · Nessuna assegnazione calcolata'}`;
     if(!initialized && width>100 && height>100){fit();initialized=true;}else draw();
   }
   function fit(){
@@ -91,7 +91,7 @@ function createVillageMap(existingMode = false) {
     for(const p of [...points].sort((a,b)=>Number(!!a.bunker || a.used)-Number(!!b.bunker || b.used))){
       const q=screen(p),r=2.5;
       const active=p.bunker?p.bunker.enabled:p.friends.length?p.friends.some(f=>f.enabled):true;
-      const color=p.used?blue(p.displayWeight):p.friends.length?colors.friendly:p.bunker?colors.bunker:colors.enemy;
+      const color=p.used?blue(p.displayWeight):p.friends.length?colors.friendly:p.bunker?colors.bunker:p.excludedEnemy?'#e9abab':colors.enemy;
       ctx.globalAlpha=active?1:0.4;ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
       if(p.used && !existingMode){
         for(let i=0;i<10;i++){
