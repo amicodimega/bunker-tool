@@ -48,3 +48,5 @@ Tabelle: menu nelle intestazioni per ordinare, selezionare player, filtrare coor
 Priorità: distanza dal nemico considerato più vicino. Le 19 coordinate indicate manualmente sono escluse dal calcolo e visibili in rosso chiaro nelle mappe.
 
 Seleziona visibili e Deseleziona visibili agiscono solo sui mittenti mostrati dai filtri. Il piano usa solo i mittenti attivi. Le modifiche alla selezione cancellano il piano precedente.
+
+Regole aggiornate: rimosso il peso minimo comando. Soglia di arrotondamento numerica, 0 disattiva, altri valori arrotondano il peso conteggiato per difetto al multiplo indicato. Opzione per ignorare mittenti con knight nelle difese presenti. Per bunker raggruppa player nel bunker. Per player raccoglie tutte le destinazioni. Le partenze delle singole unità sono ordinate cronologicamente. Setup precedenti compatibili.

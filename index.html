@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=selection19" />
+  <link rel="stylesheet" href="styles.css?v=rules20" />
 </head>
 <body>
   <main class="wrap">
@@ -73,16 +73,13 @@
 
       <article class="card">
         <h2>Regole</h2>
-        <label class="checkRow">
-          <input id="minPacketEnabled" type="checkbox" />
-          <span>Usa peso minimo per comando</span>
+        <label>Soglia di arrotondamento dei pesi
+          <input id="roundingStep" class="input" type="number" min="0" step="1" value="0" />
         </label>
-        <label>Peso minimo comando
-          <input id="minPacketWeight" class="input" type="number" min="1" step="1" value="1000" />
-        </label>
+        <p class="hint">0: nessun arrotondamento. Con 1000, il peso conteggiato viene arrotondato per difetto a multipli di 1000.</p>
         <label class="checkRow">
-          <input id="minPacketRoundingEnabled" type="checkbox" />
-          <span>Consenti arrotondamento dei pesi</span>
+          <input id="ignorePaladin" type="checkbox" />
+          <span>Ignora i villaggi con un paladino presente</span>
         </label>
         <h3>Riserva per ogni mittente</h3>
         <div class="reserveInputs">
@@ -94,11 +91,11 @@
         <p class="hint">Unità da trattenere in ogni villaggio mittente. Il peso richiesto ai bunker indica nuovi supporti da inviare.</p>
         <label>Ordina output
           <select id="outputSort" class="input">
-            <option value="player" selected>Per player</option>
+            <option value="bunker" selected>Per bunker</option>
+            <option value="player">Per player</option>
             <option value="unit">Per unità</option>
           </select>
         </label>
-        <p class="hint">Il peso minimo evita comandi troppo piccoli. L’arrotondamento considera i comandi vicini alla cifra piena.</p>
       </article>
 
       <details class="card wide friendlySection" open>
@@ -208,8 +205,8 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="table-tools.js?v=selection19"></script>
-  <script src="app.js?v=selection19"></script>
-  <script src="map.js?v=selection19"></script>
+  <script src="table-tools.js?v=rules20"></script>
+  <script src="app.js?v=rules20"></script>
+  <script src="map.js?v=rules20"></script>
 </body>
 </html>
