@@ -2206,7 +2206,7 @@ function setSettings(settings){
   if(settings.defaultBunkerTarget !== undefined) els.defaultBunkerTarget.value = settings.defaultBunkerTarget;
   if(settings.defaultBunkerArrival !== undefined) els.defaultBunkerArrival.value = settings.defaultBunkerArrival;
   if(settings.bunkers !== undefined) bunkerRows = normalizeBunkers(settings.bunkers);
-  if(settings.outputSort !== undefined) els.outputSort.value = settings.outputFormatVersion ? settings.outputSort : (settings.outputSort === "player" ? "bunker" : settings.outputSort);
+  if(settings.outputSort !== undefined) els.outputSort.value = settings.outputSort === "unit" ? "bunker" : (settings.outputFormatVersion ? settings.outputSort : (settings.outputSort === "player" ? "bunker" : settings.outputSort));
   if(settings.troopCsv !== undefined) { importedTroops = settings.troopCsv; els.troopCsv.value = importedTroops; }
   importedDefenses = settings.defenseCsv || "";
   hiddenExistingBunkers = new Set(Array.isArray(settings.hiddenExistingBunkers) ? settings.hiddenExistingBunkers : []);
@@ -2431,7 +2431,6 @@ function addBunkersFromInput(){
     existing.add(coord.coord);
   }
 
-  els.bunkerCoordsInput.value = "";
   renderBunkerTable();
   persist();
 }
@@ -2479,43 +2478,23 @@ function commandUnitRows(command){
 function formatPlayerCommands(commands){
   const lines = [];
   const byPlayer = new Map();
-  for(const row of commands.flatMap(commandUnitRows)){
-    const player = row.command.player || "unknown player";
+  for(const command of commands){
+    const player = command.player || "unknown player";
+    const units = commandUnitRows(command).sort((a,b) => a.departure - b.departure || a.unit.localeCompare(b.unit));
+    if(!units.length) continue;
     if(!byPlayer.has(player)) byPlayer.set(player, []);
-    byPlayer.get(player).push(row);
+    byPlayer.get(player).push({command, units});
   }
-  for(const [player, rows] of [...byPlayer.entries()].sort((a,b) => a[0].localeCompare(b[0]))){
+  for(const [player, entries] of [...byPlayer.entries()].sort((a,b) => a[0].localeCompare(b[0]))){
     lines.push(`[b]PLAYER[/b] [player]${player}[/player]`, "");
-    rows.sort((a,b) => a.departure - b.departure || a.command.sourceCoord.localeCompare(b.command.sourceCoord) || a.unit.localeCompare(b.unit));
-    for(const row of rows){
-      const command = row.command;
+    entries.sort((a,b) => a.units[0].departure - b.units[0].departure || a.command.sourceCoord.localeCompare(b.command.sourceCoord) || a.command.bunkerCoord.localeCompare(b.command.bunkerCoord));
+    for(const {command, units} of entries){
       lines.push(`${command.sourceCoord} -> ${command.bunkerCoord}`);
       if(command.supportUrl) lines.push(`[url=${command.supportUrl}]Support[/url]`);
-      lines.push(formatUnitSendLine(row.amount, row.unit, row.departure), "");
-    }
-  }
-  return lines;
-}
-
-function formatUnitCommands(commands){
-  const lines = [];
-
-  for(const unit of ["spear","sword","archer","heavy"]){
-    const rows = commands.flatMap(commandUnitRows).filter(row => row.unit === unit);
-    if(!rows.length) continue;
-    rows.sort((a,b) => a.departure - b.departure || a.command.player.localeCompare(b.command.player));
-
-    lines.push(`[b]${UNIT_TW_LABEL[unit].toUpperCase()}[/b]`);
-    for(const row of rows){
-      const command = row.command;
-      lines.push(`${command.sourceCoord} ([player]${command.player || "unknown player"}[/player]) -> ${command.bunkerCoord}`);
-      lines.push(`${row.amount} ${UNIT_TW_LABEL[unit]} [unit]${unit}[/unit]`);
-      lines.push(`Partenza: ${formatDateTime(row.departure)}`);
-      lines.push(`Distanza nemico: ${command.enemyDistance.toFixed(2)}`);
+      for(const row of units) lines.push(formatUnitSendLine(row.amount, row.unit, row.departure));
       lines.push("");
     }
   }
-
   return lines;
 }
 
@@ -2605,8 +2584,7 @@ function buildPlan(){
     allCommands.push(...bunkerCommands);
     if(settings.outputSort === "player"){
       // The complete player view is rendered after allocating every bunker.
-    }else if(settings.outputSort === "unit"){
-      lines.push(...formatUnitCommands(bunkerCommands));
+
     }else{
       lines.push(...formatPlayerCommands(bunkerCommands));
     }
