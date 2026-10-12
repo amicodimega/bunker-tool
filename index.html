@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=rules20" />
+  <link rel="stylesheet" href="styles.css?v=labels22" />
 </head>
 <body>
   <main class="wrap">
@@ -12,7 +12,7 @@
       <div class="heroText">
         <p class="eyebrow">Tribal Wars</p>
         <h1>Bunker Planner</h1>
-        <p class="muted">Pianifica supporti difensivi con arrivo sincronizzato, priorità per distanza dai nemici, peso minimo comando e lista bunker editabile.</p>
+        <p class="muted">Pianifica supporti difensivi con arrivo sincronizzato, priorità per distanza dai nemici e lista bunker editabile.</p>
       </div>
 
       <div class="heroSettings">
@@ -74,9 +74,9 @@
       <article class="card">
         <h2>Regole</h2>
         <label>Soglia di arrotondamento dei pesi
-          <input id="roundingStep" class="input" type="number" min="0" step="1" value="0" />
+          <input id="roundingStep" class="input" type="number" min="0" max="1000" step="1" value="0" />
         </label>
-        <p class="hint">0: nessun arrotondamento. Con 1000, il peso conteggiato viene arrotondato per difetto a multipli di 1000.</p>
+        <p class="hint">0: nessun arrotondamento. Con soglia 800, da 800 si conta 1000, da 1800 si conta 2000. Sotto la soglia si conta il migliaio inferiore.</p>
         <label class="checkRow">
           <input id="ignorePaladin" type="checkbox" />
           <span>Ignora i villaggi con un paladino presente</span>
@@ -101,8 +101,8 @@
       <details class="card wide friendlySection" open>
         <summary>Truppe amiche</summary>
         <div class="actions">
-          <button id="loadTroopsBtn" type="button">Truppe proprie</button>
-          <button id="openDefensesBtn" type="button">Difese presenti</button>
+          <button id="loadTroopsBtn" type="button">Read troops</button>
+          <button id="openDefensesBtn" type="button">Read defenses</button>
         </div>
         <p id="troopImportStatus" class="hint">Incolla entrambi gli export per caricare i mittenti.</p>
         <p class="hint">La tabella mostra le truppe disponibili. Attiva o disattiva i mittenti da usare nel piano.</p>
@@ -136,7 +136,6 @@
       <div class="resultHeader">
         <div>
           <h2>Piano</h2>
-          <p class="muted">Il piano mostra comandi, truppe, partenze e distanza dal nemico più vicino.</p>
         </div>
         <div class="actions compact">
           <button id="calcBtn" type="button">Calcola</button>
@@ -205,8 +204,8 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="table-tools.js?v=rules20"></script>
-  <script src="app.js?v=rules20"></script>
-  <script src="map.js?v=rules20"></script>
+  <script src="table-tools.js?v=labels22"></script>
+  <script src="app.js?v=labels22"></script>
+  <script src="map.js?v=labels22"></script>
 </body>
 </html>

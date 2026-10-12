@@ -2073,7 +2073,9 @@ function sendWeight(send){
 
 function effectiveWeight(weight, roundingStep){
   if(roundingStep === 0 || weight <= 0) return weight;
-  return Math.floor(weight / roundingStep) * roundingStep;
+  const lower = Math.floor(weight / 1000) * 1000;
+  const remainder = weight - lower;
+  return remainder >= roundingStep ? lower + 1000 : lower;
 }
 
 function takeDefense(source, wanted){
@@ -2449,7 +2451,7 @@ function validate(settings,bunkers,enemies,sources){
   if(!enemies.length) throw new Error("Lista nemici statica vuota. Modifica STATIC_ENEMY_VILLAGES in app.js.");
   if(!sources.length) throw new Error("Nessun mittente attivo con truppe disponibili dopo la riserva.");
 
-  if(!Number.isInteger(settings.roundingStep) || settings.roundingStep < 0) throw new Error("La soglia di arrotondamento deve essere un intero maggiore o uguale a zero.");
+  if(!Number.isInteger(settings.roundingStep) || settings.roundingStep < 0 || settings.roundingStep > 1000) throw new Error("La soglia di arrotondamento deve essere un intero tra 0 e 1000.");
 
 }
 

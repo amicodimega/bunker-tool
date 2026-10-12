@@ -243,10 +243,10 @@ dialog{
   .compactInputs{grid-template-columns:1fr 1fr}
 }
 .heroText{
-  flex:1 1 520px;
+  flex:1 1 360px;
 }
 .heroSettings{
-  flex:0 0 360px;
+  flex:1 1 620px;
   border:1px solid var(--border);
   border-radius:14px;
   padding:12px;
@@ -329,3 +329,6 @@ dialog{
 .columnMenuActions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.columnMenuActions button{font-size:13px;padding:9px 12px}
 .playerFilterList{max-height:250px;overflow:auto;border:1px solid #d7e0eb;border-radius:8px;padding:8px}
 .playerFilterList label{display:flex;align-items:center;gap:10px;padding:5px;margin:0;font-weight:400}.playerFilterList input{width:auto;margin:0}
+
+.hero{padding:16px 20px;align-items:center}.heroText .muted{margin:8px 0 0}.heroSettings .heroActions{flex-wrap:nowrap;gap:8px}.heroSettings .heroActions button{padding:8px 10px;white-space:nowrap}
+@media(max-width:780px){.heroSettings .heroActions{flex-wrap:wrap}}
