@@ -50,3 +50,5 @@ Priorità: distanza dal nemico considerato più vicino. Le 19 coordinate indicat
 Seleziona visibili e Deseleziona visibili agiscono solo sui mittenti mostrati dai filtri. Il piano usa solo i mittenti attivi. Le modifiche alla selezione cancellano il piano precedente.
 
 Regole aggiornate: rimosso il peso minimo comando. Soglia di arrotondamento numerica, 0 disattiva, altri valori arrotondano il peso conteggiato per difetto al multiplo indicato. Opzione per ignorare mittenti con knight nelle difese presenti. Per bunker raggruppa player nel bunker. Per player raccoglie tutte le destinazioni. Le partenze delle singole unità sono ordinate cronologicamente. Setup precedenti compatibili.
+
+Priorità aggiornata: pressione cumulativa gaussiana con scala 10 campi, somma exp(-distanza²/100). Prima i mittenti con pressione minore, poi il criterio preesistente della distanza dal bunker e il peso disponibile. I 19 nemici esclusi manualmente restano fuori dal calcolo e visibili in rosso chiaro.

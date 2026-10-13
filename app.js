@@ -1948,6 +1948,18 @@ function distance(a,b){
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+const ENEMY_PRESSURE_SCALE = 10;
+
+function enemyPressure(village, enemies){
+  const scaleSquared = ENEMY_PRESSURE_SCALE ** 2;
+  let pressure = 0;
+  for(const enemy of enemies){
+    const dx = village.x - enemy.x, dy = village.y - enemy.y;
+    pressure += Math.exp(-(dx * dx + dy * dy) / scaleSquared);
+  }
+  return pressure;
+}
+
 function minDistanceToEnemies(village,enemies){
   if(!enemies.length) return 0;
   return Math.min(...enemies.map(enemy => distance(village, enemy)));
@@ -2464,7 +2476,7 @@ function validate(settings,bunkers,enemies,sources){
 
 function sortSourcesForBunker(sources,bunker){
   return sources.slice().sort((a,b) => {
-    const enemySort = b.enemyDistance - a.enemyDistance;
+    const enemySort = a.enemyPressure - b.enemyPressure;
     if(enemySort) return enemySort;
 
     const bunkerSort = distance(b,bunker) - distance(a,bunker);
@@ -2515,7 +2527,8 @@ function buildPlan(){
 
   sources = sources.map(source => ({
     ...source,
-    enemyDistance: minDistanceToEnemies(source,enemies)
+    enemyDistance: minDistanceToEnemies(source,enemies),
+    enemyPressure: enemyPressure(source,enemies)
   }));
 
   validate(settings,bunkers,enemies,sources);
