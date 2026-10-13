@@ -1,4 +1,4 @@
-# py C:\Users\Schipilliti_A\Documents\bunker-tool\generate_twstats_village_map.py --start 1 --end 100 --out villages.js
+# py generate_twstats_village_map.py --start 1 --end 5100 --out villages.js
 
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--base-url",
-        default="https://it.twstats.com/it98/index.php?page=village&id={}",
+        default="https://it.twstats.com/it104/index.php?page=village&id={}",
     )
     parser.add_argument("--start", type=int, required=True)
     parser.add_argument("--end", type=int, required=True)

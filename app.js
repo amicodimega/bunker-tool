@@ -2353,6 +2353,14 @@ function getSendableSource(row){
   return result;
 }
 
+function setFilteredFriendlyEnabled(enabled){
+  const available = friendlyRows.map(getSendableSource);
+  const filtered = window.tableTools?.apply("friendly", available) || available;
+  const ids = new Set(filtered.map(row => row.id));
+  for(const row of friendlyRows) if(ids.has(row.id)) row.enabled = enabled;
+  invalidateFriendlyPlan();
+}
+
 function invalidateFriendlyPlan(){
   els.resultBox.value = "";
   els.summaryBox.textContent = "";
@@ -2822,6 +2830,8 @@ function loadSaved(){
 }
 
 function bind(){
+  document.getElementById("activateFriendsBtn").addEventListener("click", () => setFilteredFriendlyEnabled(true));
+  document.getElementById("deactivateFriendsBtn").addEventListener("click", () => setFilteredFriendlyEnabled(false));
   document.getElementById("confirmAllBtn").addEventListener("click", confirmAllCommands);
   document.getElementById("downloadSetupBtn").addEventListener("click", async () => {
     const text = await encodeSettings();

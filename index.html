@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=grouped23" />
+  <link rel="stylesheet" href="styles.css?v=bulk24" />
 </head>
 <body>
   <main class="wrap">
@@ -107,6 +107,10 @@
         <p class="hint">La tabella mostra le truppe disponibili. Attiva o disattiva i mittenti da usare nel piano.</p>
 
         <div id="friendlyVillageList">
+        <div class="actions">
+          <button id="activateFriendsBtn" type="button" title="Attiva i villaggi mostrati dai filtri">Attiva</button>
+          <button id="deactivateFriendsBtn" type="button" title="Disattiva i villaggi mostrati dai filtri">Disattiva</button>
+        </div>
         <div id="friendlyTableStatus" class="tableToolsStatus"></div>
         <div class="tableWrap">
           <table id="friendlyTable" class="bunkerTable troopTable">
@@ -203,8 +207,8 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="table-tools.js?v=grouped23"></script>
-  <script src="app.js?v=grouped23"></script>
-  <script src="map.js?v=grouped23"></script>
+  <script src="table-tools.js?v=bulk24"></script>
+  <script src="app.js?v=bulk24"></script>
+  <script src="map.js?v=bulk24"></script>
 </body>
 </html>
