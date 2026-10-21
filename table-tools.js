@@ -23,7 +23,7 @@
     const result = rows.filter(row => Object.entries(state.filters).every(([key, filter]) => {
       const v = value(kind, row, key);
       if(key === 'player') return filter.players.includes(v || '');
-      if(key === 'coord') return String(v).includes(filter.text);
+      if(key === 'coord') return filter.coords ? filter.coords.includes(String(v)) : String(v).includes(filter.text);
       return matches(Number(v) || 0, filter);
     }));
     if(state.sort) {
@@ -107,9 +107,17 @@
         return selected.length === players.length ? null : {players:selected};
       };
     } else if(key === 'coord') {
-      const label = element('label', 'Contiene', form);
-      const input = element('input', undefined, label); input.className = 'input'; input.value = filter?.text || '';
-      getFilter = () => input.value.trim() ? {text:input.value.trim()} : null;
+      const label = element('label', 'Coordinate o testo da cercare', form);
+      const input = element('textarea', undefined, label);
+      input.className = 'input textarea mono'; input.rows = 5;
+      input.placeholder = 'Incolla un testo con una o più coordinate xxx|yyy';
+      input.value = filter?.text || '';
+      getFilter = () => {
+        const text = input.value.trim();
+        if(!text) return null;
+        const coords = parseCoords(text).map(row => row.coord);
+        return coords.length ? {text, coords} : {text};
+      };
     } else {
       const label = element('label', 'Mostra valori', form);
       const mode = element('select', undefined, label); mode.className = 'input';
