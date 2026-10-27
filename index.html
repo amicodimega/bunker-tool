@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=coordfilter27" />
+  <link rel="stylesheet" href="styles.css?v=balance28" />
 </head>
 <body>
   <main class="wrap">
@@ -81,6 +81,10 @@
           <input id="ignorePaladin" type="checkbox" />
           <span>Ignora i villaggi con un paladino presente</span>
         </label>
+        <label>Bilanciamento lance / spade + 4 × pesanti
+          <input id="balanceShare" class="input" type="number" min="50" max="100" step="1" value="100" />
+        </label>
+        <p class="hint">100: libero. 50: metà per gruppo. 60: ciascun gruppo tra 40% e 60%. Arcieri esclusi dal rapporto. Il bilanciamento riguarda il totale inviato a ogni bunker.</p>
         <h3>Riserva per ogni mittente</h3>
         <div class="reserveInputs">
           <label>Lance<input id="reserveSpear" class="input" type="number" min="0" step="1" value="0"></label>
@@ -91,8 +95,8 @@
         <p class="hint">Unità da trattenere in ogni villaggio mittente. Il peso richiesto ai bunker indica nuovi supporti da inviare.</p>
         <label>Ordina output
           <select id="outputSort" class="input">
-            <option value="bunker" selected>Per bunker</option>
-            <option value="player">Per player</option>
+            <option value="bunker">Per bunker</option>
+            <option value="player" selected>Per player</option>
           </select>
         </label>
       </article>
@@ -207,8 +211,8 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="table-tools.js?v=coordfilter27"></script>
-  <script src="app.js?v=coordfilter27"></script>
-  <script src="map.js?v=coordfilter27"></script>
+  <script src="table-tools.js?v=balance28"></script>
+  <script src="app.js?v=balance28"></script>
+  <script src="map.js?v=balance28"></script>
 </body>
 </html>
