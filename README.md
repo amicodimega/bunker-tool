@@ -68,3 +68,5 @@ Riduzione tempo supporti: percentuale sottratta al tempo di viaggio, es. 20% mol
 Mappa: clicca un villaggio amico per selezionarlo e usa Disattiva mittente per escluderlo dal calcolo e invalidare il piano precedente.
 
 Totali per player nel Piano: due tabelle, prima mittenti attivati utilizzabili secondo le regole, poi tutti i villaggi caricati. Prima del calcolo mostra disponibilità residue dopo convalide e riserve. Con piano calcolato mostra quantità e peso previsti e residui dopo il piano. Dopo convalida le quantità non vengono sottratte due volte.
+
+Mappa bunker esistenti: bunker quadrati colorati con bordo bianco e contorno scuro, sopra gli altri punti. Amici e nemici più piccoli e attenuati. Mostra nemici consente di nascondere i soli punti nemici di sfondo, senza modificare i calcoli. I tooltip privilegiano i quadrati dei bunker.

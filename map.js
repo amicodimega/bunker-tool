@@ -9,6 +9,18 @@ function createVillageMap(existingMode = false) {
   const ctx = canvas.getContext('2d');
   const tooltip = document.getElementById(existingMode ? 'existingMapTooltip' : 'mapTooltip');
   const status = document.getElementById(existingMode ? 'existingMapStatus' : 'mapStatus');
+  const selectedSenders = new Set();
+  function refreshSelection(){
+    if(existingMode) return;
+    const valid=new Set(friendlyRows.map(row=>row.coord));
+    for(const coord of selectedSenders) if(!valid.has(coord)) selectedSenders.delete(coord);
+    const active=friendlyRows.filter(row=>selectedSenders.has(row.coord)&&row.enabled).length;
+    document.getElementById("mapSenderSelection").hidden=!selectedSenders.size;
+    const text=document.getElementById("mapSenderSelectionText");
+    text.textContent=`${selectedSenders.size} mittenti selezionati · ${active} attivi`;
+    text.title=[...selectedSenders].join(", ");
+    document.getElementById("mapDisableSender").disabled=active===0;
+  }
   const colors = {enemy:'#c63535',friendly:'#9ca3af',used:'#245da7',bunker:'#e5b600'};
   let width=0, height=0, scale=1, center={x:500,y:500}, points=[], hover=null, drag=null, initialized=false, maxWeight=1;
   const num = n => Number(n || 0).toLocaleString('it-IT');
@@ -42,6 +54,7 @@ function createVillageMap(existingMode = false) {
     return parts.join('\n\n');
   }
   function rebuild(){
+    refreshSelection();
     const entries=new Map();
     function add(coord){if(!entries.has(coord)){const p=parseCoords(coord)[0];if(!p)return null;entries.set(coord,{...p,friends:[],enemy:false,bunker:null});}return entries.get(coord);}
     for(const e of parseCoords(STATIC_ENEMY_VILLAGES.join('\n'))){const p=add(e.coord);p.enemy=true;p.excludedEnemy=EXCLUDED_ENEMY_VILLAGES.has(e.coord);}
@@ -98,12 +111,18 @@ function createVillageMap(existingMode = false) {
       }
     }
     // Bunkers are drawn last so their outlines stay visible over other categories.
-    for(const p of [...points].sort((a,b)=>Number(!!a.bunker || a.used)-Number(!!b.bunker || b.used))){
-      const q=screen(p),r=2.5;
+    for(const p of [...points].sort((a,b)=>(existingMode && a.used ? 2 : Number(!!a.bunker || a.used))-(existingMode && b.used ? 2 : Number(!!b.bunker || b.used)))){
+      if(!visiblePoint(p)) continue;
+      const q=screen(p),r=existingMode?(p.used?4:1.8):2.5;
       const active=p.bunker?p.bunker.enabled:p.friends.length?p.friends.some(f=>f.enabled):true;
       const color=p.used?villageWeightColor(p.displayWeight):p.friends.length?colors.friendly:p.bunker?colors.bunker:p.excludedEnemy?'#e9abab':colors.enemy;
-      ctx.globalAlpha=active?1:0.4;ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
-      if(p.used && !existingMode){
+      ctx.globalAlpha=existingMode&&!p.used?(p.enemy&&!p.friends.length?0.35:0.6):(active?1:0.4);ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
+      if(p.used && existingMode){
+        ctx.globalAlpha=1;
+        ctx.fillStyle='#ffffff';ctx.fillRect(q.x-5.3,q.y-5.3,10.6,10.6);
+        ctx.fillStyle=color;ctx.fillRect(q.x-3.8,q.y-3.8,7.6,7.6);
+        ctx.strokeStyle='#17283c';ctx.lineWidth=0.6;ctx.strokeRect(q.x-3.8,q.y-3.8,7.6,7.6);
+      }else if(p.used && !existingMode){
         for(let i=0;i<10;i++){
           const angle=-Math.PI/2+i*Math.PI/5, radius=i%2?2.2:5;
           const x=q.x+Math.cos(angle)*radius,y=q.y+Math.sin(angle)*radius;
@@ -114,12 +133,29 @@ function createVillageMap(existingMode = false) {
       if(p.bunker){ctx.strokeStyle=colors.bunker;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x+r,q.y);ctx.lineTo(q.x,q.y+r);ctx.lineTo(q.x-r,q.y);ctx.closePath();ctx.stroke();}
       ctx.globalAlpha=1;
     }
+    if(!existingMode){
+      for(const p of points){
+        if(!selectedSenders.has(p.coord)) continue;
+        const q=screen(p);
+        ctx.globalAlpha=1;ctx.beginPath();ctx.arc(q.x,q.y,8,0,Math.PI*2);
+        ctx.strokeStyle='#ffffff';ctx.lineWidth=5;ctx.stroke();
+        ctx.strokeStyle='#d29b00';ctx.lineWidth=2.5;ctx.stroke();
+      }
+    }
     ctx.restore();
+  }
+  function visiblePoint(p){
+    return !existingMode || document.getElementById("existingMapEnemies").checked || !p.enemy || p.used || p.friends.length>0 || !!p.bunker;
   }
   function local(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
   function inspect(pos){
     let nearest=null,best=11;
-    for(const p of points){const q=screen(p),d=Math.hypot(pos.x-q.x,pos.y-q.y);if(d<best){nearest=p;best=d;}}
+    for(const p of points){
+      if(!visiblePoint(p)) continue;
+      const q=screen(p),d=Math.hypot(pos.x-q.x,pos.y-q.y);
+      const priority=existingMode&&p.used&&d<=6;
+      if(priority && !(nearest?.used && best<=6) || d<best && !(existingMode&&nearest?.used&&best<=6&&!p.used)){nearest=p;best=d;}
+    }
     hover=nearest;tooltip.hidden=!nearest;
     if(nearest){tooltip.textContent=details(nearest);tooltip.style.left=`${Math.max(0,Math.min(pos.x+14,width-tooltip.offsetWidth-8))}px`;tooltip.style.top=`${Math.max(0,Math.min(pos.y+14,height-tooltip.offsetHeight-8))}px`;}
     draw();
@@ -131,13 +167,11 @@ function createVillageMap(existingMode = false) {
     if(tap){
       inspect(local(e));
       if(!existingMode){
-        const panel=document.getElementById('mapSenderSelection');
         const row=hover && friendlyRows.find(row=>row.coord===hover.coord);
-        panel.hidden=!row;
         if(row){
-          document.getElementById('mapSenderSelectionText').textContent=`${row.coord} · ${row.player || ''}${row.enabled?'':' · Disattivato'}`;
-          const button=document.getElementById('mapDisableSender');
-          button.dataset.coord=row.coord;button.disabled=!row.enabled;
+          if(selectedSenders.has(row.coord)) selectedSenders.delete(row.coord);
+          else selectedSenders.add(row.coord);
+          refreshSelection();draw();
         }
       }
     }
@@ -147,15 +181,15 @@ function createVillageMap(existingMode = false) {
   canvas.addEventListener('wheel',e=>{e.preventDefault();const pos=local(e),before=world(pos);scale=Math.max(0.1,Math.min(100,scale*Math.exp(-e.deltaY*0.0015)));center={x:before.x-(pos.x-width/2)/scale,y:before.y-(pos.y-height/2)/scale};hover=null;tooltip.hidden=true;draw();},{passive:false});
   canvas.addEventListener('keydown',e=>{if(e.key==='Home'){fit();e.preventDefault();}else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){center.x+=(e.key==='ArrowLeft'?-40:e.key==='ArrowRight'?40:0)/scale;center.y+=(e.key==='ArrowUp'?-40:e.key==='ArrowDown'?40:0)/scale;draw();e.preventDefault();}});
   document.getElementById(existingMode ? 'existingMapFit' : 'mapFit').addEventListener('click',fit);
+  if(existingMode) document.getElementById('existingMapEnemies').addEventListener('change',()=>{hover=null;tooltip.hidden=true;draw();});
   if(!existingMode){
     document.getElementById('mapLinks').addEventListener('change',draw);
-    document.getElementById('mapDisableSender').addEventListener('click',event=>{
-      const row=friendlyRows.find(row=>row.coord===event.target.dataset.coord);
-      if(!row) return;
-      row.enabled=false;
-      document.getElementById('mapSenderSelectionText').textContent=`${row.coord} · ${row.player || ''} · Disattivato. Ricalcola il piano.`;
-      event.target.disabled=true;
-      invalidateFriendlyPlan();
+    document.getElementById('mapDisableSender').addEventListener('click',()=>{
+      for(const row of friendlyRows) if(selectedSenders.has(row.coord)) row.enabled=false;
+      invalidateFriendlyPlan();refreshSelection();draw();
+    });
+    document.getElementById('mapClearSelection').addEventListener('click',()=>{
+      selectedSenders.clear();refreshSelection();draw();
     });
   }
   new ResizeObserver(()=>{const r=canvas.getBoundingClientRect();width=r.width;height=r.height;const ratio=window.devicePixelRatio||1;canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);if(!initialized){rebuild();}else draw();}).observe(canvas);
