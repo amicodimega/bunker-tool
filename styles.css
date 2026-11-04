@@ -345,6 +345,6 @@ dialog{
 
 .mapSenderSelection{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px;margin-top:10px;background:#f2f8ff;border:1px solid #dceafa;border-radius:9px}.mapSenderSelection[hidden]{display:none}
 
-#playerTotalsSection[hidden]{display:none}.playerTotalsSection{margin-top:18px;border-top:1px solid #d7e0eb;padding-top:12px}.playerTotalsSection h3{margin:14px 0 9px}.playerTotalsSection .unitBreakdown{display:block;font-size:12px;color:#64748b;line-height:1.6;font-weight:400}.playerTotalsSection tfoot{background:#f2f8ff;font-weight:700}.playerTotalsSection td{vertical-align:top}.playerTotalsSection td:first-child{min-width:120px}#togglePlayerTotals[aria-expanded="true"]{background:#dceeff;color:#164e7a}
+#playerTotalsSection[hidden]{display:none}.playerTotalsCard{margin-top:18px;border-top:1px solid #d7e0eb;padding-top:12px}.playerTotalsCard h3{margin:14px 0 9px}.playerTotalsCard .unitBreakdown{display:block;font-size:12px;color:#64748b;line-height:1.6;font-weight:400}.playerTotalsCard tfoot{background:#f2f8ff;font-weight:700}.playerTotalsCard td{vertical-align:top}.playerTotalsCard td:first-child{min-width:120px}#togglePlayerTotals[aria-expanded="true"]{background:#dceeff;color:#164e7a}
 
-.card.playerTotalsSection{margin-top:0;border-top:1px solid #dceafa;padding:20px}
+.card.playerTotalsCard{margin-top:0;border-top:1px solid #dceafa;padding:20px}
