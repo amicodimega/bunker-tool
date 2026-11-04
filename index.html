@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=release47" />
+  <link rel="stylesheet" href="styles.css?v=release48" />
 </head>
 <body>
   <main class="wrap">
     <section class="card hero">
       <div class="heroText">
-        <p class="eyebrow">Tribal Wars</p>
+        <p class="eyebrow">Tribal Wars <span class="releaseBadge">v48</span></p>
         <h1>Bunker Planner</h1>
         <p class="muted">Pianifica supporti difensivi con arrivo sincronizzato, priorità per pressione nemica e lista bunker editabile.</p>
       </div>
@@ -135,7 +135,7 @@
       </details>
     </section>
 
-    <section class="card">
+    <section id="planSection" class="card">
       <div class="resultHeader">
         <div>
           <h2>Piano</h2>
@@ -203,7 +203,7 @@
       <div id="existingTableStatus" class="tableToolsStatus"></div>
       <div class="tableWrap existingBunkerTable"><table id="existingTable" class="bunkerTable"><thead><tr><th>Mappa</th><th>Villaggio</th><th>Player</th><th>Lance in supporto</th><th>Spade in supporto</th><th>Arcieri in supporto</th><th>Cavalleria pesante in supporto</th><th>Peso supporti</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
       <div class="resultHeader"><h3>Mappa dei bunker esistenti</h3><button id="existingMapFit" type="button">Inquadra tutti</button></div>
-      <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">■ Bunker esistenti: colore per peso supporti</span><label><input id="existingMapEnemies" type="checkbox" checked /> Mostra nemici</label></div>
+      <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapExcludedEnemy">● Nemici esclusi</span><span class="mapFriendly">● Amici</span><span class="mapUsed">■ Bunker esistenti: colore per peso supporti</span><label><input id="existingMapEnemies" type="checkbox" checked /> Mostra nemici</label></div>
       <div id="existingWeightLegend" class="weightLegend" aria-label="Fasce di peso dei bunker"></div>
       <p id="existingMapStatus" class="hint" aria-live="polite"></p>
       <div class="mapWrap"><canvas id="existingVillageMap" aria-label="Mappa dei bunker esistenti" tabindex="0"></canvas><div id="existingMapTooltip" role="status" hidden></div></div>
@@ -211,7 +211,7 @@
     <section class="card" id="mapCard">
       <div class="resultHeader"><div><h2>Mappa dei villaggi</h2><p class="muted">Passa sui villaggi per leggere coordinate e truppe. Rotella per zoom, trascina per spostare la mappa.</p></div><button type="button" id="mapFit">Inquadra tutti</button></div>
       <div class="mapLegend">
-        <span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">★ Mittenti utilizzati: colore per peso inviato</span><span class="mapBunker">◆ Bunker</span><span>○ Disattivati</span>
+        <span class="mapEnemy">● Nemici</span><span class="mapExcludedEnemy">● Nemici esclusi</span><span class="mapFriendly">● Amici</span><span class="mapUsed">★ Mittenti utilizzati: colore per peso inviato</span><span class="mapBunker">◆ Bunker</span><span>○ Disattivati</span>
         <label><input type="checkbox" id="mapLinks" checked> Collegamenti del piano</label>
       </div>
       <div id="villageWeightLegend" class="weightLegend" aria-label="Fasce di peso dei mittenti"></div>
@@ -255,12 +255,12 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="table-tools.js?v=release47"></script>
-  <script src="app.js?v=release47"></script>
-  <script src="map.js?v=release47"></script>
-  <script src="dispatch-order.js?v=release47"></script>
-  <script src="replacement-supports.js?v=release47"></script>
-  <script src="auxiliary-sections.js?v=release47"></script>
-  <script src="player-totals.js?v=release47"></script>
+  <script src="table-tools.js?v=release48"></script>
+  <script src="app.js?v=release48"></script>
+  <script src="map.js?v=release48"></script>
+  <script src="dispatch-order.js?v=release48"></script>
+  <script src="replacement-supports.js?v=release48"></script>
+  <script src="auxiliary-sections.js?v=release48"></script>
+  <script src="player-totals.js?v=release48"></script>
 </body>
 </html>

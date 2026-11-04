@@ -115,7 +115,7 @@ function createVillageMap(existingMode = false) {
       if(!visiblePoint(p)) continue;
       const q=screen(p),r=existingMode?(p.used?4:1.8):2.5;
       const active=p.bunker?p.bunker.enabled:p.friends.length?p.friends.some(f=>f.enabled):true;
-      const color=p.used?villageWeightColor(p.displayWeight):p.friends.length?colors.friendly:p.bunker?colors.bunker:p.excludedEnemy?'#94a3b8':colors.enemy;
+      const color=p.used?villageWeightColor(p.displayWeight):p.friends.length?colors.friendly:p.bunker?colors.bunker:p.excludedEnemy?'#efb4b4':colors.enemy;
       ctx.globalAlpha=existingMode&&!p.used?(p.enemy&&!p.friends.length?0.35:0.6):(active?1:0.4);ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
       if(p.used && existingMode){
         ctx.globalAlpha=1;
@@ -129,7 +129,7 @@ function createVillageMap(existingMode = false) {
           if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
         }
         ctx.closePath();ctx.fill();ctx.strokeStyle='#ffffff';ctx.lineWidth=0.8;ctx.stroke();
-      }else{ctx.arc(q.x,q.y,r,0,Math.PI*2);if(active && !(p.excludedEnemy && !p.friends.length))ctx.fill();else ctx.stroke();}
+      }else{ctx.arc(q.x,q.y,r,0,Math.PI*2);if(active)ctx.fill();else ctx.stroke();}
       if(p.bunker){ctx.strokeStyle=colors.bunker;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(q.x,q.y-r);ctx.lineTo(q.x+r,q.y);ctx.lineTo(q.x,q.y+r);ctx.lineTo(q.x-r,q.y);ctx.closePath();ctx.stroke();}
       ctx.globalAlpha=1;
     }

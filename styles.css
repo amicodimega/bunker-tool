@@ -348,3 +348,5 @@ dialog{
 #playerTotalsSection[hidden]{display:none}.playerTotalsCard{margin-top:18px;border-top:1px solid #d7e0eb;padding-top:12px}.playerTotalsCard h3{margin:14px 0 9px}.playerTotalsCard .unitBreakdown{display:block;font-size:12px;color:#64748b;line-height:1.6;font-weight:400}.playerTotalsCard tfoot{background:#f2f8ff;font-weight:700}.playerTotalsCard td{vertical-align:top}.playerTotalsCard td:first-child{min-width:120px}#togglePlayerTotals[aria-expanded="true"]{background:#dceeff;color:#164e7a}
 
 .card.playerTotalsCard{margin-top:0;border-top:1px solid #dceafa;padding:20px}
+
+.releaseBadge{font-size:11px;color:#64748b;margin-left:8px}.mapExcludedEnemy{color:#c98f8f}#playerTotalsSection{border:1px solid #dceafa;border-radius:16px;background:#f2f8ff;margin:0 0 18px;padding:20px}
