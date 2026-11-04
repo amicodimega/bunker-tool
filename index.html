@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=replacement32" />
+  <link rel="stylesheet" href="styles.css?v=exact35" />
 </head>
 <body>
   <main class="wrap">
@@ -73,10 +73,6 @@
 
       <article class="card">
         <h2>Regole</h2>
-        <label>Soglia di arrotondamento dei pesi
-          <input id="roundingStep" class="input" type="number" min="0" max="1000" step="1" value="0" />
-        </label>
-        <p class="hint">0: nessun arrotondamento. Con soglia 800, da 800 si conta 1000, da 1800 si conta 2000. Sotto la soglia si conta il migliaio inferiore.</p>
         <label class="checkRow">
           <input id="ignorePaladin" type="checkbox" />
           <span>Ignora i villaggi con un paladino presente</span>
@@ -145,8 +141,6 @@
           <h2>Piano</h2>
         </div>
         <div class="actions compact">
-          <button id="toggleReplacement" type="button" aria-expanded="false" aria-controls="replacementSection">Sostituisci supporti</button>
-          <button id="toggleDispatchOrder" type="button" aria-expanded="false" aria-controls="dispatchOrderSection">Ordine degli invii</button>
           <button id="calcBtn" type="button">Calcola</button>
           <button id="copyResultBtn" type="button">Copia risultato</button>
           <button id="confirmAllBtn" type="button" disabled>Convalida tutto</button>
@@ -158,11 +152,16 @@
       <div id="warningsBox" class="warnings" hidden></div>
       <textarea id="resultBox" class="output mono" rows="18" readonly></textarea>
     </section>
-    <section id="replacementSection" class="card replacementSection" hidden>
+    <div class="actions auxiliaryToolButtons">
+      <button id="toggleReplacement" type="button" aria-expanded="false" aria-controls="replacementSection">Sostituisci supporti</button>
+      <button id="toggleDispatchOrder" type="button" aria-expanded="false" aria-controls="dispatchOrderSection">Ordine degli invii</button>
+      <button id="toggleExistingBunkers" type="button" aria-expanded="false" aria-controls="existingBunkersSection">Bunker esistenti</button>
+    </div>
+    <section id="replacementSection" class="card replacementSection auxiliaryTool" hidden>
       <h2>Sostituisci supporti</h2>
       <label>Comandi da sostituire<textarea id="replacementText" class="input textarea mono" rows="8" placeholder="Incolla i pezzi del piano con mittente, destinatario e quantità delle unità."></textarea></label>
       <div class="actions"><button id="readReplacement" type="button">Leggi comandi</button></div>
-      <p class="hint">Lance, spade e arcieri valgono 1. I pesanti valgono 4. Il paladino non aggiunge peso. La soglia di arrotondamento delle Regole si applica a ogni invio.</p>
+      <p class="hint">Lance, spade e arcieri valgono 1. I pesanti valgono 4. Il paladino non aggiunge peso.</p>
       <div id="replacementError" class="error" hidden role="alert"></div>
       <p id="replacementStatus" class="hint" aria-live="polite"></p>
       <div id="replacementPreview" hidden>
@@ -172,7 +171,7 @@
         <div class="actions"><button id="applyReplacement" type="button">Prepara riassegnazione</button></div>
       </div>
     </section>
-    <section id="dispatchOrderSection" class="card dispatchOrder" hidden>
+    <section id="dispatchOrderSection" class="card dispatchOrder auxiliaryTool" hidden>
       <h2>Ordine degli invii</h2>
       <div class="twoCols">
         <label>Villaggio destinatario<input id="dispatchTarget" class="input mono" placeholder="500|500" /></label>
@@ -187,6 +186,17 @@
       <p id="dispatchOrderStatus" class="hint" aria-live="polite"></p>
       <div class="tableWrap"><table class="bunkerTable"><thead><tr><th>Player</th><th>Lance</th><th>Spade</th><th>Pesanti</th><th>Paladino</th></tr></thead><tbody id="dispatchOrderBody"></tbody></table></div>
     </section>
+    <section class="card existingBunkers auxiliaryTool" id="existingBunkersSection" hidden>
+      <h2>Bunker esistenti</h2>
+      <p class="hint">Villaggi con supporti presenti. Deseleziona Mappa per nascondere un villaggio.</p>
+      <p id="existingBunkerStatus" class="hint" aria-live="polite"></p>
+      <div id="existingTableStatus" class="tableToolsStatus"></div>
+      <div class="tableWrap existingBunkerTable"><table id="existingTable" class="bunkerTable"><thead><tr><th>Mappa</th><th>Villaggio</th><th>Player</th><th>Lance in supporto</th><th>Spade in supporto</th><th>Arcieri in supporto</th><th>Cavalleria pesante in supporto</th><th>Peso supporti</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
+      <div class="resultHeader"><h3>Mappa dei bunker esistenti</h3><button id="existingMapFit" type="button">Inquadra tutti</button></div>
+      <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">● Bunker esistenti: blu più scuro = più supporti</span></div>
+      <p id="existingMapStatus" class="hint" aria-live="polite"></p>
+      <div class="mapWrap"><canvas id="existingVillageMap" aria-label="Mappa dei bunker esistenti" tabindex="0"></canvas><div id="existingMapTooltip" role="status" hidden></div></div>
+    </section>
     <section class="card" id="mapCard">
       <div class="resultHeader"><div><h2>Mappa dei villaggi</h2><p class="muted">Passa sui villaggi per leggere coordinate e truppe. Rotella per zoom, trascina per spostare la mappa.</p></div><button type="button" id="mapFit">Inquadra tutti</button></div>
       <div class="mapLegend">
@@ -197,17 +207,7 @@
       <div class="mapWrap"><canvas id="villageMap" aria-label="Mappa interattiva dei villaggi" tabindex="0"></canvas><div id="mapTooltip" role="status" hidden></div></div>
       <p class="hint">Le truppe dei bunker indicano i nuovi supporti assegnati dal piano. La tabella amici riporta le truppe disponibili. Dopo una modifica, premi Calcola per aggiornare le assegnazioni. Su touch, tocca un villaggio per leggere i dettagli.</p>
     </section>
-    <details class="card existingBunkers" id="existingBunkersSection">
-      <summary>Bunker esistenti</summary>
-      <p class="hint">Villaggi con supporti presenti. Deseleziona Mappa per nascondere un villaggio.</p>
-      <p id="existingBunkerStatus" class="hint" aria-live="polite"></p>
-      <div id="existingTableStatus" class="tableToolsStatus"></div>
-      <div class="tableWrap existingBunkerTable"><table id="existingTable" class="bunkerTable"><thead><tr><th>Mappa</th><th>Villaggio</th><th>Player</th><th>Lance in supporto</th><th>Spade in supporto</th><th>Arcieri in supporto</th><th>Cavalleria pesante in supporto</th><th>Peso supporti</th><th>Peso difese totali</th></tr></thead><tbody id="existingBunkerBody"></tbody></table></div>
-      <div class="resultHeader"><h3>Mappa dei bunker esistenti</h3><button id="existingMapFit" type="button">Inquadra tutti</button></div>
-      <div class="mapLegend"><span class="mapEnemy">● Nemici</span><span class="mapFriendly">● Amici</span><span class="mapUsed">● Bunker esistenti: blu più scuro = più supporti</span></div>
-      <p id="existingMapStatus" class="hint" aria-live="polite"></p>
-      <div class="mapWrap"><canvas id="existingVillageMap" aria-label="Mappa dei bunker esistenti" tabindex="0"></canvas><div id="existingMapTooltip" role="status" hidden></div></div>
-    </details>
+
     <footer class="copyright">© Soobinize</footer>
   </main>
 
@@ -242,10 +242,11 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="table-tools.js?v=replacement32"></script>
-  <script src="app.js?v=replacement32"></script>
-  <script src="map.js?v=replacement32"></script>
-  <script src="dispatch-order.js?v=replacement32"></script>
-  <script src="replacement-supports.js?v=replacement32"></script>
+  <script src="table-tools.js?v=exact35"></script>
+  <script src="app.js?v=exact35"></script>
+  <script src="map.js?v=exact35"></script>
+  <script src="dispatch-order.js?v=exact35"></script>
+  <script src="replacement-supports.js?v=exact35"></script>
+  <script src="auxiliary-sections.js?v=exact35"></script>
 </body>
 </html>

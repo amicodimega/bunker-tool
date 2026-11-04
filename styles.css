@@ -338,3 +338,5 @@ dialog{
 #dispatchOrderSection[hidden]{display:none}#toggleDispatchOrder[aria-expanded="true"]{background:#004a86;color:white}.dispatchOrder{margin-bottom:18px}.dispatchOrder h2{margin-bottom:14px}.dispatchOrder td{white-space:nowrap}.dispatchOrder .expiredDeparture{color:#b42318}
 
 #replacementSection[hidden],#replacementPreview[hidden]{display:none}.replacementSection{margin-bottom:18px}.replacementSection h2{margin-bottom:14px}#toggleReplacement[aria-expanded="true"]{background:#004a86;color:white}.replacementSection td input{min-width:100px}.replacementSection td input[type="datetime-local"]{min-width:220px}
+
+.card.auxiliaryTool{background:#f2f8ff;border-color:#dceafa;margin-bottom:18px}.auxiliaryTool[hidden]{display:none}.auxiliaryTool h2{margin-bottom:14px}.auxiliaryToolButtons{margin:16px 0}.auxiliaryToolButtons button{background:#f2f8ff;border-color:#dceafa}.auxiliaryToolButtons button[aria-expanded="true"]{background:#dceeff;color:#164e7a;border-color:#bcd9f3}

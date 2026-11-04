@@ -61,7 +61,7 @@ function applyReplacementTargets(rows, mode, disableSenders){
   el('readReplacement').addEventListener('click',()=>{
     parsed=[];el('replacementPreview').hidden=true;el('replacementError').hidden=true;el('replacementStatus').textContent='';el('replacementBody').replaceChildren();
     try{
-      step=Number(els.roundingStep.value);
+      step=0;
       if(!Number.isInteger(step)||step<0||step>1000) throw new Error('Controlla la soglia di arrotondamento nelle Regole.');
       parsed=parseReplacementSupports(el('replacementText').value,step);
       if(!parsed.length) throw new Error('Non ho trovato comandi con mittente, destinatario e quantità delle truppe.');
@@ -79,7 +79,6 @@ function applyReplacementTargets(rows, mode, disableSenders){
   el('applyReplacement').addEventListener('click',()=>{
     try{
       if(!parsed.length || el('applyReplacement').disabled) return;
-      if(Number(els.roundingStep.value)!==step) throw new Error('La soglia di arrotondamento è cambiata. Premi di nuovo Leggi comandi.');
       const rows=parsed.map((row,i)=>{
         const tr=el('replacementBody').children[i];
         const weight=Number(tr.querySelector('[data-replacement-field="weight"]').value);
