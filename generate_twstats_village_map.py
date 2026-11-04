@@ -1,4 +1,4 @@
-# py generate_twstats_village_map.py --start 1 --end 5100 --out villages.js
+# py generate_twstats_village_map.py --start 1 --end 5445 --out villages.js
 
 from __future__ import annotations
 

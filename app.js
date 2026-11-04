@@ -2446,21 +2446,24 @@ const UNIT_BASE_MINUTES = {
   spear: 18,
   sword: 22,
   archer: 18,
-  heavy: 11
+  heavy: 11,
+  knight: 10
 };
 
 const UNIT_LABEL = {
   spear: "spear",
   sword: "sword",
   archer: "archer",
-  heavy: "heavy"
+  heavy: "heavy",
+  knight: "knight"
 };
 
 const UNIT_TW_LABEL = {
   spear: "lance",
   sword: "spade",
   archer: "arcieri",
-  heavy: "oni"
+  heavy: "oni",
+  knight: "paladino"
 };
 
 const els = {
@@ -2703,7 +2706,10 @@ function enforceBunkerBalance(commands, sources, share, roundingStep){
   }
   for(const command of commands){command.actualWeight=sendWeight(command.send);command.sentWeight=effectiveWeight(command.actualWeight,roundingStep);}
   // A rounded-zero dispatch can still carry troops needed to keep the requested mix.
-  for(let i=commands.length-1;i>=0;i--) if(!commands[i].actualWeight) commands.splice(i,1);
+  for(let i=commands.length-1;i>=0;i--) if(!commands[i].actualWeight){
+    if(commands[i].send.knight) sources.find(s=>s.coord===commands[i].sourceCoord).knight += commands[i].send.knight;
+    commands.splice(i,1);
+  }
 }
 
 function takeDefense(source, wanted){
@@ -2754,6 +2760,10 @@ function getUnitDeadlines(source,bunker,send,settings){
     const seconds = travelSeconds(source,bunker,unit,settings.worldSpeed,settings.unitSpeed,bunker.supportSlowdown);
     deadlines[unit] = addSeconds(bunker.arrival, -seconds);
   }
+  if(source.knight > 0 || send.knight > 0){
+    const seconds = travelSeconds(source,bunker,"knight",settings.worldSpeed,settings.unitSpeed,bunker.supportSlowdown);
+    deadlines.knight = addSeconds(bunker.arrival, -seconds);
+  }
   return deadlines;
 }
 
@@ -2784,7 +2794,7 @@ function getItalyNow(){
 function removeExpiredUnits(source,send,deadlines,now){
   for(const unit of ["spear","sword","archer","heavy"]){
     if(!send[unit]) continue;
-    if(deadlines[unit] && deadlines[unit].getTime() <= now.getTime()){
+    if((deadlines.knight || deadlines[unit]) && (deadlines.knight || deadlines[unit]).getTime() <= now.getTime()){
       source[unit] += send[unit];
       send[unit] = 0;
       delete deadlines[unit];
@@ -2828,7 +2838,7 @@ function setSettings(settings){
   confirmedSent = {};
   for(const [coord, units] of Object.entries(settings.confirmedSent || {})){
     if(!parseCoords(coord).length) continue;
-    confirmedSent[coord] = Object.fromEntries(["spear", "sword", "archer", "heavy"].map(unit => [unit, Math.max(0, Math.trunc(Number(units[unit]) || 0))]));
+    confirmedSent[coord] = Object.fromEntries(["spear", "sword", "archer", "heavy", "knight"].map(unit => [unit, Math.max(0, Math.trunc(Number(units[unit]) || 0))]));
   }
   if(settings.worldSpeed !== undefined && settings.worldSpeed !== "") els.worldSpeed.value = settings.worldSpeed;
   if(settings.unitSpeed !== undefined && settings.unitSpeed !== "") els.unitSpeed.value = settings.unitSpeed;
@@ -2866,6 +2876,7 @@ function normalizeBunkers(rows){
 }
 
 function normalizeFriendlyRows(rows){
+  const ownKnights = new Map(parseTroops(importedTroops, true).map(row => [row.coord, row.knight]));
   return (Array.isArray(rows) ? rows : []).map(row => {
     const coords = parseCoords(row.coord || "")[0];
     if(!coords) return null;
@@ -2884,6 +2895,7 @@ function normalizeFriendlyRows(rows){
       y: coords.y,
       player: row.player || "",
       knight: toInt(row.knight),
+      availableKnight: row.availableKnight ?? Math.min(toInt(row.knight), ownKnights.get(coords.coord) || 0),
       spear,
       sword,
       archer,
@@ -2894,6 +2906,7 @@ function normalizeFriendlyRows(rows){
 }
 
 function renderTroopTable(preservePlan = false){
+  if(!preservePlan) window.clearDispatchOrder?.();
   if(!preservePlan){
     mapCommands = [];
     mapPlanReady = false;
@@ -2946,6 +2959,7 @@ function estimateFriendlyRows(troopText, defenseText){
       sword: Math.min(row.sword, defense.sword),
       archer: Math.min(row.archer, defense.archer),
       knight: defense.knight,
+      availableKnight: Math.min(row.knight, defense.knight),
       heavy: Math.min(row.heavy, defense.heavy)}];
   }));
 }
@@ -2976,6 +2990,7 @@ function applyTroopExport(kind){
 
 function getSendableSource(row){
   const result = {...row};
+  result.knight = Math.max(0, (row.availableKnight || 0) - (confirmedSent[row.coord]?.knight || 0));
   for(const [unit, id] of [["spear", "reserveSpear"], ["sword", "reserveSword"], ["archer", "reserveArcher"], ["heavy", "reserveHeavy"]]){
     result[unit] = Math.max(0, (row[unit] || 0) - (confirmedSent[row.coord]?.[unit] || 0) - Math.max(0, Math.trunc(Number(document.getElementById(id).value) || 0)));
   }
@@ -3106,7 +3121,7 @@ function sortSourcesForBunker(sources,bunker){
 
 function commandUnitRows(command){
   const rows = [];
-  for(const unit of ["spear","sword","archer","heavy"]){
+  for(const unit of ["spear","sword","archer","heavy","knight"]){
     if(!command.send[unit]) continue;
     rows.push({ unit, amount: command.send[unit], departure: command.deadlines[unit], command });
   }
@@ -3129,6 +3144,7 @@ function formatPlayerCommands(commands){
     for(const {command, units} of entries){
       lines.push(`${command.sourceCoord} -> ${command.bunkerCoord}`);
       if(command.supportUrl) lines.push(`[url=${command.supportUrl}]Support[/url]`);
+      if(command.send.knight) lines.push("Orari per unità senza paladino. Con il paladino, tutte le truppe partono al suo orario.");
       for(const row of units) lines.push(formatUnitSendLine(row.amount, row.unit, row.departure));
       lines.push("");
     }
@@ -3184,7 +3200,7 @@ function buildPlan(){
     if(balance) for(const source of sortedSources){
       const copy = {...source};
       const deadlines = getUnitDeadlines(source,bunker,copy,settings);
-      for(const unit of ["spear","sword","archer","heavy"]) if(source.coord === bunker.coord || !deadlines[unit] || deadlines[unit] <= now) copy[unit] = 0;
+      for(const unit of ["spear","sword","archer","heavy"]) if(source.coord === bunker.coord || !(deadlines.knight || deadlines[unit]) || (deadlines.knight || deadlines[unit]) <= now) copy[unit] = 0;
       eligible.set(source.coord,copy);
     }
     const budget = balance ? createBalanceBudget([...eligible.values()], Math.round(bunker.target), settings.balanceShare) : null;
@@ -3216,6 +3232,10 @@ function buildPlan(){
       sentHere += planWeight;
 
 
+      if(source.knight > 0){
+        send.knight = 1;
+        source.knight -= 1;
+      }
       bunkerCommands.push({
         sourceCoord: source.coord,
         bunkerCoord: bunker.coord,
@@ -3314,12 +3334,17 @@ function calculate(){
 function updateConfirmationState(){
   document.getElementById("confirmAllBtn").disabled = !mapPlanReady || !mapCommands.length;
   const totals = Object.values(confirmedSent).reduce((sum, row) => {
-    for(const unit of ["spear", "sword", "archer", "heavy"]) sum[unit] += row[unit];
+    for(const unit of ["spear", "sword", "archer", "heavy", "knight"]) sum[unit] += row[unit] || 0;
     return sum;
-  }, {spear:0, sword:0, archer:0, heavy:0});
-  const weight = availableWeight(totals);
-  document.getElementById("confirmedStatus").textContent = weight > 0
-    ? `Invii convalidati: ${totals.spear.toLocaleString("it-IT")} lance, ${totals.sword.toLocaleString("it-IT")} spade, ${totals.archer.toLocaleString("it-IT")} arcieri, ${totals.heavy.toLocaleString("it-IT")} cavallerie pesanti.` : "";
+  }, {spear:0, sword:0, archer:0, heavy:0, knight:0});
+  const involved = friendlyRows.filter(row => confirmedSent[row.coord]);
+  const residual = involved.map(getSendableSource).reduce((sum,row) => {
+    for(const unit of ["spear","sword","archer","heavy","knight"]) sum[unit] += row[unit] || 0;
+    return sum;
+  }, {spear:0,sword:0,archer:0,heavy:0,knight:0});
+  const describe = row => `${row.spear.toLocaleString("it-IT")} lance, ${row.sword.toLocaleString("it-IT")} spade, ${row.archer.toLocaleString("it-IT")} arcieri, ${row.heavy.toLocaleString("it-IT")} cavallerie pesanti${row.knight ? `, ${row.knight.toLocaleString("it-IT")} paladini` : ""}`;
+  document.getElementById("confirmedStatus").textContent = Object.keys(confirmedSent).length
+    ? `Invii convalidati: ${describe(totals)}.\nDisponibilità residua dei ${involved.length} mittenti convalidati: ${describe(residual)}.` : "";
 }
 
 function confirmAllCommands(){
@@ -3332,8 +3357,8 @@ function confirmAllCommands(){
   const commands = mapCommands.slice();
   const assigned = new Map();
   for(const command of commands){
-    const units = confirmedSent[command.sourceCoord] ||= {spear:0,sword:0,archer:0,heavy:0};
-    for(const unit of ["spear", "sword", "archer", "heavy"]) units[unit] += command.send[unit];
+    const units = confirmedSent[command.sourceCoord] ||= {spear:0,sword:0,archer:0,heavy:0,knight:0};
+    for(const unit of ["spear", "sword", "archer", "heavy", "knight"]) units[unit] = (units[unit] || 0) + (command.send[unit] || 0);
     assigned.set(command.bunkerId, (assigned.get(command.bunkerId) || 0) + command.sentWeight);
   }
   for(const bunker of bunkerRows){

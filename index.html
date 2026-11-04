@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tribal Wars Bunker Planner</title>
-  <link rel="stylesheet" href="styles.css?v=balance28" />
+  <link rel="stylesheet" href="styles.css?v=replacement32" />
 </head>
 <body>
   <main class="wrap">
@@ -145,6 +145,8 @@
           <h2>Piano</h2>
         </div>
         <div class="actions compact">
+          <button id="toggleReplacement" type="button" aria-expanded="false" aria-controls="replacementSection">Sostituisci supporti</button>
+          <button id="toggleDispatchOrder" type="button" aria-expanded="false" aria-controls="dispatchOrderSection">Ordine degli invii</button>
           <button id="calcBtn" type="button">Calcola</button>
           <button id="copyResultBtn" type="button">Copia risultato</button>
           <button id="confirmAllBtn" type="button" disabled>Convalida tutto</button>
@@ -155,6 +157,35 @@
       <p id="confirmedStatus" class="hint" aria-live="polite"></p>
       <div id="warningsBox" class="warnings" hidden></div>
       <textarea id="resultBox" class="output mono" rows="18" readonly></textarea>
+    </section>
+    <section id="replacementSection" class="card replacementSection" hidden>
+      <h2>Sostituisci supporti</h2>
+      <label>Comandi da sostituire<textarea id="replacementText" class="input textarea mono" rows="8" placeholder="Incolla i pezzi del piano con mittente, destinatario e quantità delle unità."></textarea></label>
+      <div class="actions"><button id="readReplacement" type="button">Leggi comandi</button></div>
+      <p class="hint">Lance, spade e arcieri valgono 1. I pesanti valgono 4. Il paladino non aggiunge peso. La soglia di arrotondamento delle Regole si applica a ogni invio.</p>
+      <div id="replacementError" class="error" hidden role="alert"></div>
+      <p id="replacementStatus" class="hint" aria-live="polite"></p>
+      <div id="replacementPreview" hidden>
+        <div class="tableWrap"><table class="bunkerTable"><thead><tr><th>Bunker</th><th>Lance</th><th>Spade</th><th>Arcieri</th><th>Pesanti</th><th>Peso da riassegnare</th><th>Arrivo</th></tr></thead><tbody id="replacementBody"></tbody></table></div>
+        <label>Target dei bunker<select id="replacementMode" class="input"><option value="set">Imposta il peso da riassegnare</option><option value="add">Somma al target esistente</option></select></label>
+        <label class="checkRow"><input id="replacementDisableSenders" type="checkbox" checked /><span>Disattiva i mittenti indicati nei comandi</span></label>
+        <div class="actions"><button id="applyReplacement" type="button">Prepara riassegnazione</button></div>
+      </div>
+    </section>
+    <section id="dispatchOrderSection" class="card dispatchOrder" hidden>
+      <h2>Ordine degli invii</h2>
+      <div class="twoCols">
+        <label>Villaggio destinatario<input id="dispatchTarget" class="input mono" placeholder="500|500" /></label>
+        <label>Data e ora di arrivo<input id="dispatchArrival" class="input" type="datetime-local" step="1" /></label>
+      </div>
+      <div class="actions">
+        <button id="calculateDispatchOrder" type="button">Calcola orari</button>
+        <button id="copyDispatchOrder" type="button" disabled>Copia riepilogo</button>
+      </div>
+      <p class="hint">Per ogni player, l’orario entro cui iniziare a inviare ciascuna unità dai villaggi attivati con truppe disponibili. Il paladino ha una colonna aggiuntiva.</p>
+      <div id="dispatchOrderError" class="error" hidden role="alert"></div>
+      <p id="dispatchOrderStatus" class="hint" aria-live="polite"></p>
+      <div class="tableWrap"><table class="bunkerTable"><thead><tr><th>Player</th><th>Lance</th><th>Spade</th><th>Pesanti</th><th>Paladino</th></tr></thead><tbody id="dispatchOrderBody"></tbody></table></div>
     </section>
     <section class="card" id="mapCard">
       <div class="resultHeader"><div><h2>Mappa dei villaggi</h2><p class="muted">Passa sui villaggi per leggere coordinate e truppe. Rotella per zoom, trascina per spostare la mappa.</p></div><button type="button" id="mapFit">Inquadra tutti</button></div>
@@ -211,8 +242,10 @@
   </dialog>
 
   <script src="villages.js"></script>
-  <script src="table-tools.js?v=balance28"></script>
-  <script src="app.js?v=balance28"></script>
-  <script src="map.js?v=balance28"></script>
+  <script src="table-tools.js?v=replacement32"></script>
+  <script src="app.js?v=replacement32"></script>
+  <script src="map.js?v=replacement32"></script>
+  <script src="dispatch-order.js?v=replacement32"></script>
+  <script src="replacement-supports.js?v=replacement32"></script>
 </body>
 </html>

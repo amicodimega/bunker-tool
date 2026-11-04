@@ -332,3 +332,9 @@ dialog{
 
 .hero{padding:16px 20px;align-items:center}.heroText .muted{margin:8px 0 0}.heroSettings .heroActions{flex-wrap:nowrap;gap:8px}.heroSettings .heroActions button{padding:8px 10px;white-space:nowrap}
 @media(max-width:780px){.heroSettings .heroActions{flex-wrap:wrap}}
+
+#confirmedStatus{white-space:pre-line}
+
+#dispatchOrderSection[hidden]{display:none}#toggleDispatchOrder[aria-expanded="true"]{background:#004a86;color:white}.dispatchOrder{margin-bottom:18px}.dispatchOrder h2{margin-bottom:14px}.dispatchOrder td{white-space:nowrap}.dispatchOrder .expiredDeparture{color:#b42318}
+
+#replacementSection[hidden],#replacementPreview[hidden]{display:none}.replacementSection{margin-bottom:18px}.replacementSection h2{margin-bottom:14px}#toggleReplacement[aria-expanded="true"]{background:#004a86;color:white}.replacementSection td input{min-width:100px}.replacementSection td input[type="datetime-local"]{min-width:220px}
