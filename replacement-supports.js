@@ -10,7 +10,7 @@ function parseReplacementSupports(text, roundingStep){
     if(arrival && header){arrivals.set(header,arrival[1]);continue;}
     const pair = line.match(/\b(\d{1,3}\|\d{1,3})\s*(?:->|→)\s*(\d{1,3}\|\d{1,3})\b/);
     if(pair){
-      current={source:parseCoords(pair[1])[0].coord,target:parseCoords(pair[2])[0].coord,send:{spear:0,sword:0,archer:0,heavy:0},arrival:''};
+      current={source:parseCoords(pair[1])[0].coord,target:parseCoords(pair[2])[0].coord,send:{spear:0,sword:0,archer:0,heavy:0,knight:0},departures:{},arrival:''};
       commands.push(current);continue;
     }
     if(!current) continue;
@@ -19,34 +19,57 @@ function parseReplacementSupports(text, roundingStep){
     const unitTag = raw.match(/\[unit\](spear|sword|archer|heavy|knight)\[\/unit\]/i);
     const name = amount[2].trim().toLowerCase();
     const unit = unitTag?.[1].toLowerCase() || (/^(?:lance|lancieri|spear)\b/.test(name)?'spear':/^(?:spade|spadaccini|sword)\b/.test(name)?'sword':/^(?:arcieri|archer)\b/.test(name)?'archer':/^(?:oni|pesanti|heavy|cavalleri[ae] pesant[ei])\b/.test(name)?'heavy':null);
-    if(!unit || unit==='knight') continue;
+    if(!unit) continue;
     const count=toInt(amount[1]);
     if(!Number.isInteger(count) || count<0) throw new Error('Quantità di unità non valida.');
     current.send[unit]+=count;
+    current.departures[unit] = raw.match(/partenza:\s*(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2})/i)?.[1] || "";
   }
   const groups = new Map();
   for(const command of commands){
     const actual=sendWeight(command.send);if(actual<=0) continue;
-    if(!groups.has(command.target)) groups.set(command.target,{coord:command.target,spear:0,sword:0,archer:0,heavy:0,weight:0,actualWeight:0,count:0,senders:new Set(),arrival:arrivals.get(command.target)||''});
+    if(!groups.has(command.target)) groups.set(command.target,{coord:command.target,spear:0,sword:0,archer:0,heavy:0,weight:0,actualWeight:0,count:0,senders:new Set(),arrival:arrivals.get(command.target)||'',commands:[]});
     const row=groups.get(command.target);
     for(const unit of ['spear','sword','archer','heavy']) row[unit]+=command.send[unit];
+    row.commands.push(command);
     row.actualWeight+=actual;row.weight+=effectiveWeight(actual,roundingStep);row.count++;row.senders.add(command.source);
   }
   return [...groups.values()];
 }
 
-function applyReplacementTargets(rows, mode, disableSenders){
+function restoreReplacementTroops(rows){
+  const restored={spear:0,sword:0,archer:0,heavy:0,knight:0};
+  for(const row of rows) for(const command of row.commands || []){
+    const key=JSON.stringify([command.source,command.target,command.send,command.departures]);
+    if(restoredSupportKeys.has(key)) continue;
+    const confirmed=confirmedSent[command.source];
+    if(!confirmed) continue;
+    let changed=false;
+    for(const unit of Object.keys(restored)){
+      const amount=Math.min(confirmed[unit] || 0,command.send[unit] || 0);
+      confirmed[unit]=(confirmed[unit] || 0)-amount;restored[unit]+=amount;
+      if(amount) changed=true;
+    }
+    if(changed) restoredSupportKeys.add(key);
+    if(!Object.values(confirmed).some(n=>n>0)) delete confirmedSent[command.source];
+  }
+  return restored;
+}
+
+function applyReplacementTargets(rows, mode, disableSenders, restoreTroops = false){
+  const restored = restoreTroops ? restoreReplacementTroops(rows) : null;
   for(const row of rows){
     let bunker=bunkerRows.find(item=>item.coord===row.coord);
     if(!bunker){bunker={id:crypto.randomUUID(),coord:row.coord,enabled:true,target:'0',arrival:'',supportSlowdown:''};bunkerRows.push(bunker);}
     bunker.target=String(row.weight+(mode==='add'?Math.max(0,Number(bunker.target)||0):0));
     bunker.arrival=row.arrival;bunker.enabled=true;
   }
-  if(disableSenders){
+  if(disableSenders || restoreTroops){
     const senders=new Set(rows.flatMap(row=>[...row.senders]));
-    for(const row of friendlyRows) if(senders.has(row.coord)) row.enabled=false;
+    for(const row of friendlyRows) if(senders.has(row.coord)) row.enabled=restoreTroops;
   }
   renderBunkerTable();invalidateFriendlyPlan();
+  return restored;
 }
 
 (() => {
@@ -56,6 +79,11 @@ function applyReplacementTargets(rows, mode, disableSenders){
   el('toggleReplacement').addEventListener('click',()=>{
     const open=el('replacementSection').hidden;el('replacementSection').hidden=!open;
     el('toggleReplacement').setAttribute('aria-expanded',String(open));
+  });
+  el('replacementRestoreTroops').addEventListener('change',()=>{
+    const restore=el('replacementRestoreTroops').checked;
+    el('replacementDisableSenders').disabled=restore;
+    if(restore) el('replacementDisableSenders').checked=false;
   });
   el('replacementText').addEventListener('input',()=>{parsed=[];el('replacementPreview').hidden=true;el('replacementStatus').textContent='';el('replacementError').hidden=true;});
   el('readReplacement').addEventListener('click',()=>{
@@ -87,9 +115,9 @@ function applyReplacementTargets(rows, mode, disableSenders){
         if(!parseDateTime(arrival)) throw new Error(`Inserisci un arrivo valido per ${row.coord}.`);
         return {...row,weight,arrival};
       });
-      applyReplacementTargets(rows,el('replacementMode').value,el('replacementDisableSenders').checked);
+      const restored = applyReplacementTargets(rows,el('replacementMode').value,el('replacementDisableSenders').checked,el('replacementRestoreTroops').checked);
       el('applyReplacement').disabled=true;el('replacementError').hidden=true;
-      el('replacementStatus').textContent=`Preparati ${rows.length} bunker, ${rows.reduce((n,row)=>n+row.weight,0).toLocaleString('it-IT')} di peso da riassegnare. Premi Calcola nel Piano.`;
+      el('replacementStatus').textContent=`Preparati ${rows.length} bunker, ${rows.reduce((n,row)=>n+row.weight,0).toLocaleString('it-IT')} di peso da riassegnare. Premi Calcola nel Piano.${restored ? ` Ripristinate: ${restored.spear} lance, ${restored.sword} spade, ${restored.archer} arcieri, ${restored.heavy} pesanti, ${restored.knight} paladini.` : ""}`;
     }catch(err){error(err.message);}
   });
 })();

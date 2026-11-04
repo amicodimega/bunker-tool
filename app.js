@@ -2707,6 +2707,7 @@ let importedTroops = "";
 let importedDefenses = "";
 let hiddenExistingBunkers = new Set();
 let confirmedSent = {};
+let restoredSupportKeys = new Set();
 let planSnapshot = "";
 
 function parseCoords(text){
@@ -2748,7 +2749,7 @@ function travelSeconds(from,to,unit,speed,unitSpeed,supportSlowdownPercent = 0){
   const fields = distance(from,to);
   const slowdown = Number(supportSlowdownPercent || 0);
   const supportSpeedFactor = Math.max(0.01, 1 - slowdown / 100);
-  const minutes = UNIT_BASE_MINUTES[unit] * fields / speed / unitSpeed / supportSpeedFactor;
+  const minutes = UNIT_BASE_MINUTES[unit] * fields / speed / unitSpeed * supportSpeedFactor;
   return Math.round(minutes * 60);
 }
 
@@ -3031,6 +3032,7 @@ function getSettings(){
     defenseCsv: importedDefenses,
     hiddenExistingBunkers: [...hiddenExistingBunkers],
     confirmedSent: JSON.parse(JSON.stringify(confirmedSent)),
+    restoredSupportKeys: [...restoredSupportKeys],
     reserveSpear: document.getElementById("reserveSpear").value,
     reserveSword: document.getElementById("reserveSword").value,
     reserveArcher: document.getElementById("reserveArcher").value,
@@ -3043,6 +3045,7 @@ function getSettings(){
 }
 
 function setSettings(settings){
+  restoredSupportKeys = new Set(settings.restoredSupportKeys || []);
   confirmedSent = {};
   for(const [coord, units] of Object.entries(settings.confirmedSent || {})){
     if(!parseCoords(coord).length) continue;
@@ -3539,6 +3542,7 @@ function calculate(){
 }
 
 function updateConfirmationState(){
+  window.refreshPlayerTotals?.();
   document.getElementById("confirmAllBtn").disabled = !mapPlanReady || !mapCommands.length;
   const totals = Object.values(confirmedSent).reduce((sum, row) => {
     for(const unit of ["spear", "sword", "archer", "heavy", "knight"]) sum[unit] += row[unit] || 0;

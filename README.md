@@ -60,3 +60,11 @@ Supporti con paladino: disponibilità stimata min(knight proprio, knight nelle d
 Ordine degli invii: pulsante nel Piano per aprire la sezione. Una coordinata e un arrivo, colonne Lance, Spade, Pesanti e Paladino per player. Mostra la prima partenza necessaria tra i mittenti attivati con disponibilità. Al passaggio sull’orario indica il villaggio iniziale. Copia riepilogo include coordinate e orari. Rispetta velocità mondo e unità, riserve, convalide, esclusione paladini e riduzione del bunker se presente in lista.
 
 Sostituisci supporti: incolla comandi copiati dal piano, Leggi comandi aggrega quantità e peso per destinatario. Riconosce BBCode e testo, pesanti x4, paladini senza peso, arrotondamento per singolo invio secondo le Regole. Anteprima con peso e arrivo modificabili. Prepara riassegnazione imposta il target o lo somma al target esistente e permette di disattivare i mittenti originali. Le convalide rimangono registrate. Dopo la preparazione premere Calcola.
+
+Colori mappa: fasce assolute di 10000 di peso, scala a più colori e legenda per le fasce presenti.
+Sostituzione: opzione Ripristina le truppe convalidate e riattiva i mittenti. Sottrae dal registro delle convalide solo le quantità dei comandi incollati, fino al massimo convalidato. Le chiavi dei comandi già ripristinati sono salvate nel setup per impedire duplicazioni. Senza spunta la disponibilità resta invariata.
+
+Riduzione tempo supporti: percentuale sottratta al tempo di viaggio, es. 20% moltiplica i tempi per 0.8.
+Mappa: clicca un villaggio amico per selezionarlo e usa Disattiva mittente per escluderlo dal calcolo e invalidare il piano precedente.
+
+Totali per player nel Piano: due tabelle, prima mittenti attivati utilizzabili secondo le regole, poi tutti i villaggi caricati. Prima del calcolo mostra disponibilità residue dopo convalide e riserve. Con piano calcolato mostra quantità e peso previsti e residui dopo il piano. Dopo convalida le quantità non vengono sottratte due volte.

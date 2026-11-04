@@ -1,3 +1,9 @@
+function villageWeightColor(weight){
+  const band=Math.floor(Math.max(0,Number(weight)||0)/10000);
+  const palette=['#12a8bd','#2563eb','#6444dc','#a832b5','#dc327c','#ec7610','#9a6613','#3b934c','#147b74','#334e85','#713c55'];
+  return palette[band] || `hsl(${(band*137.508)%360} 72% 38%)`;
+}
+
 function createVillageMap(existingMode = false) {
   const canvas = document.getElementById(existingMode ? 'existingVillageMap' : 'villageMap');
   const ctx = canvas.getContext('2d');
@@ -12,11 +18,6 @@ function createVillageMap(existingMode = false) {
     return commands.reduce((sum,c)=>{for(const u of ['spear','sword','archer','heavy'])sum[u]+=c.send[u];return sum;},{spear:0,sword:0,archer:0,heavy:0});
   }
   function troops(t){return `Lance: ${num(t.spear)}\nSpade: ${num(t.sword)}\nArcieri: ${num(t.archer)}\nCavalleria pesante: ${num(t.heavy)}`;}
-  function blue(weight){
-    const t = Math.sqrt(Math.max(0, weight) / maxWeight);
-    const light=[56,155,255], dark=[0,70,210];
-    return `rgb(${light.map((v,i) => Math.round(v+(dark[i]-v)*t)).join(',')})`;
-  }
   function details(p){
     if(existingMode){
       const parts=[p.coord];
@@ -57,7 +58,16 @@ function createVillageMap(existingMode = false) {
     const weights = new Map();
     if(!existingMode) for(const command of mapCommands) weights.set(command.sourceCoord, (weights.get(command.sourceCoord) || 0) + command.actualWeight);
     points=[...entries.values()].map(p=>({...p,used:existingMode?!!p.existing:used.has(p.coord), displayWeight:existingMode?(p.existing?.surplusWeight || 0):(weights.get(p.coord) || 0)}));
-    maxWeight=Math.max(1,...points.map(p=>p.displayWeight));
+    const legend=document.getElementById(existingMode?'existingWeightLegend':'villageWeightLegend');
+    if(legend){
+      legend.replaceChildren();
+      const bands=[...new Set(points.filter(p=>p.used).map(p=>Math.floor(p.displayWeight/10000)))].sort((a,b)=>a-b);
+      for(const band of bands){
+        const item=document.createElement('span'), swatch=document.createElement('i');
+        swatch.style.background=villageWeightColor(band*10000);swatch.setAttribute('aria-hidden','true');
+        item.append(swatch,document.createTextNode(`${(band*10000).toLocaleString('it-IT')}–${((band+1)*10000-1).toLocaleString('it-IT')}`));legend.append(item);
+      }
+    }
     hover=null;tooltip.hidden=true;
     status.textContent=existingMode ? `${existing.length} bunker esistenti · ${friendByCoord.size} villaggi amici` : `${points.filter(p=>p.enemy && !p.excludedEnemy).length} nemici considerati · ${points.filter(p=>p.excludedEnemy).length} esclusi · ${friendlyRows.length} amici caricati · ${used.size} mittenti utilizzati · ${bunkerRows.length} bunker${mapPlanReady?' · Piano calcolato':' · Nessuna assegnazione calcolata'}`;
     if(!initialized && width>100 && height>100){fit();initialized=true;}else draw();
@@ -91,7 +101,7 @@ function createVillageMap(existingMode = false) {
     for(const p of [...points].sort((a,b)=>Number(!!a.bunker || a.used)-Number(!!b.bunker || b.used))){
       const q=screen(p),r=2.5;
       const active=p.bunker?p.bunker.enabled:p.friends.length?p.friends.some(f=>f.enabled):true;
-      const color=p.used?blue(p.displayWeight):p.friends.length?colors.friendly:p.bunker?colors.bunker:p.excludedEnemy?'#e9abab':colors.enemy;
+      const color=p.used?villageWeightColor(p.displayWeight):p.friends.length?colors.friendly:p.bunker?colors.bunker:p.excludedEnemy?'#e9abab':colors.enemy;
       ctx.globalAlpha=active?1:0.4;ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
       if(p.used && !existingMode){
         for(let i=0;i<10;i++){
@@ -116,13 +126,38 @@ function createVillageMap(existingMode = false) {
   }
   canvas.addEventListener('pointerdown',e=>{drag={pos:local(e),center:{...center},moved:false};canvas.setPointerCapture(e.pointerId);});
   canvas.addEventListener('pointermove',e=>{const pos=local(e);if(drag){const dx=pos.x-drag.pos.x,dy=pos.y-drag.pos.y;if(Math.hypot(dx,dy)>3)drag.moved=true;center={x:drag.center.x-dx/scale,y:drag.center.y-dy/scale};hover=null;tooltip.hidden=true;draw();}else inspect(pos);});
-  canvas.addEventListener('pointerup',e=>{const tap=drag&&!drag.moved;drag=null;if(tap)inspect(local(e));});
+  canvas.addEventListener('pointerup',e=>{
+    const tap=drag&&!drag.moved;drag=null;
+    if(tap){
+      inspect(local(e));
+      if(!existingMode){
+        const panel=document.getElementById('mapSenderSelection');
+        const row=hover && friendlyRows.find(row=>row.coord===hover.coord);
+        panel.hidden=!row;
+        if(row){
+          document.getElementById('mapSenderSelectionText').textContent=`${row.coord} · ${row.player || ''}${row.enabled?'':' · Disattivato'}`;
+          const button=document.getElementById('mapDisableSender');
+          button.dataset.coord=row.coord;button.disabled=!row.enabled;
+        }
+      }
+    }
+  });
   canvas.addEventListener('pointercancel',()=>{drag=null;});
   canvas.addEventListener('pointerleave',()=>{if(!drag){hover=null;tooltip.hidden=true;draw();}});
   canvas.addEventListener('wheel',e=>{e.preventDefault();const pos=local(e),before=world(pos);scale=Math.max(0.1,Math.min(100,scale*Math.exp(-e.deltaY*0.0015)));center={x:before.x-(pos.x-width/2)/scale,y:before.y-(pos.y-height/2)/scale};hover=null;tooltip.hidden=true;draw();},{passive:false});
   canvas.addEventListener('keydown',e=>{if(e.key==='Home'){fit();e.preventDefault();}else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){center.x+=(e.key==='ArrowLeft'?-40:e.key==='ArrowRight'?40:0)/scale;center.y+=(e.key==='ArrowUp'?-40:e.key==='ArrowDown'?40:0)/scale;draw();e.preventDefault();}});
   document.getElementById(existingMode ? 'existingMapFit' : 'mapFit').addEventListener('click',fit);
-  if(!existingMode) document.getElementById('mapLinks').addEventListener('change',draw);
+  if(!existingMode){
+    document.getElementById('mapLinks').addEventListener('change',draw);
+    document.getElementById('mapDisableSender').addEventListener('click',event=>{
+      const row=friendlyRows.find(row=>row.coord===event.target.dataset.coord);
+      if(!row) return;
+      row.enabled=false;
+      document.getElementById('mapSenderSelectionText').textContent=`${row.coord} · ${row.player || ''} · Disattivato. Ricalcola il piano.`;
+      event.target.disabled=true;
+      invalidateFriendlyPlan();
+    });
+  }
   new ResizeObserver(()=>{const r=canvas.getBoundingClientRect();width=r.width;height=r.height;const ratio=window.devicePixelRatio||1;canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);if(!initialized){rebuild();}else draw();}).observe(canvas);
   rebuild();
   return rebuild;

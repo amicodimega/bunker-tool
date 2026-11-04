@@ -27,6 +27,7 @@ function buildDispatchOrder(sources, target, settings){
   const el = id => document.getElementById(id);
   const units = ['spear','sword','heavy','knight'];
   const labels = {spear:'Lance',sword:'Spade',heavy:'Pesanti',knight:'Paladino'};
+  const minuteTime = date => formatDateTime(date).slice(0,16);
   let copyText = '', signature = '';
   function currentSignature(){return JSON.stringify([getSettings(),el('dispatchTarget').value,el('dispatchArrival').value]);}
   function clear(){
@@ -57,23 +58,23 @@ function buildDispatchOrder(sources, target, settings){
       const target = {...coords[0],arrival,supportSlowdown};
       const rows = buildDispatchOrder(getActiveFriendlySources(), target, settings);
       if(!rows.length) throw new Error('Nessun mittente attivo con lance, spade, pesanti o paladino disponibili.');
-      const now = getItalyNow(), lines = [`Destinatario: ${target.coord}`,`Arrivo: ${formatDateTime(arrival)}`,''];
+      const now = getItalyNow(), lines = [`Destinatario: ${target.coord}`,`Arrivo: ${minuteTime(arrival)}`,''];
       for(const row of rows){
         const tr = document.createElement('tr'), player = document.createElement('td');
         player.textContent = row.player; tr.append(player); lines.push(row.player);
         for(const unit of units){
           const td = document.createElement('td'), time = row.departures[unit];
-          td.textContent = time ? formatDateTime(time) : '–';
+          td.textContent = time ? minuteTime(time) : '–';
           if(time){
             td.title = `Primo villaggio: ${row.origins[unit]}`;
             if(time <= now){td.classList.add('expiredDeparture');td.title += ' · Orario trascorso';}
-            lines.push(`${labels[unit]}: entro ${formatDateTime(time)} (${row.origins[unit]})`);
+            lines.push(`${labels[unit]}: entro ${minuteTime(time)} (${row.origins[unit]})`);
           }
           tr.append(td);
         }
         el('dispatchOrderBody').append(tr); lines.push('');
       }
-      el('dispatchOrderStatus').textContent = `${rows.length} player · Destinatario ${target.coord}${supportSlowdown ? ` · Riduzione velocità supporti ${supportSlowdown}%` : ''}. Gli orari trascorsi sono in rosso.`;
+      el('dispatchOrderStatus').textContent = `${rows.length} player · Destinatario ${target.coord}${supportSlowdown ? ` · Riduzione tempo supporti ${supportSlowdown}%` : ''}. Gli orari trascorsi sono in rosso.`;
       copyText = lines.join('\n'); signature = currentSignature(); el('copyDispatchOrder').disabled = false;
     }catch(err){el('dispatchOrderError').textContent = err.message;el('dispatchOrderError').hidden = false;}
   });
