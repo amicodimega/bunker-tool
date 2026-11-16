@@ -350,3 +350,5 @@ dialog{
 .card.playerTotalsCard{margin-top:0;border-top:1px solid #dceafa;padding:20px}
 
 .releaseBadge{font-size:11px;color:#64748b;margin-left:8px}.mapExcludedEnemy{color:#c98f8f}#playerTotalsSection{border:1px solid #dceafa;border-radius:16px;background:#f2f8ff;margin:0 0 18px;padding:20px}
+
+#summaryBox{white-space:pre-line}

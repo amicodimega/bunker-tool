@@ -2947,8 +2947,8 @@ function createBalanceBudget(rows, target, share){
 
 function takeBalancedDefense(source, eligible, budget){
   const send={spear:Math.min(source.spear,eligible.spear,budget.spear),sword:0,heavy:0,archer:Math.min(source.archer,eligible.archer,budget.archer)};
-  send.heavy=Math.min(source.heavy,eligible.heavy,Math.floor(budget.other/4));
-  send.sword=Math.min(source.sword,eligible.sword,budget.other-4*send.heavy);
+  send.heavy=Math.min(source.heavy,eligible.heavy,budget.heavy);
+  send.sword=Math.min(source.sword,eligible.sword,budget.sword);
   for(const unit of Object.keys(send)) source[unit]-=send[unit];
   source.weight=availableWeight(source);
   return {send,sentWeight:sendWeight(send)};
@@ -3437,6 +3437,7 @@ function buildPlan(){
   const lines = [];
   const warnings = [];
   const allCommands = [];
+  const bunkerMix = [];
   let totalSentWeight = 0;
   let totalMissing = 0;
   let commandCount = 0;
@@ -3492,7 +3493,7 @@ function buildPlan(){
       }
 
 
-      if(balance){budget.spear -= send.spear; budget.other -= send.sword + 4*send.heavy; budget.archer -= send.archer;}
+      if(balance){budget.spear -= send.spear; budget.sword -= send.sword; budget.heavy -= send.heavy; budget.archer -= send.archer;}
       remaining = Math.max(0, remaining - planWeight);
       sentHere += planWeight;
 
@@ -3520,6 +3521,14 @@ function buildPlan(){
       sentHere = bunkerCommands.reduce((sum,c)=>sum+c.sentWeight,0);
       remaining = Math.max(0, Math.round(bunker.target) - sentHere);
     }
+    if(balance){
+      const spear = bunkerCommands.reduce((sum,c)=>sum+c.send.spear,0);
+      const other = bunkerCommands.reduce((sum,c)=>sum+c.send.sword+4*c.send.heavy,0);
+      const pct = n => (100*n/(spear+other)).toLocaleString("it-IT",{maximumFractionDigits:2});
+      bunkerMix.push(spear+other
+        ? `${bunker.coord}: lance ${pct(spear)}% · spade e pesanti ${pct(other)}%`
+        : `${bunker.coord}: nessuna lancia, spada o pesante assegnata`);
+    }
     totalSentWeight += sentHere;
     commandCount += bunkerCommands.length;
     allCommands.push(...bunkerCommands);
@@ -3545,6 +3554,7 @@ function buildPlan(){
 
   return {
     commands: allCommands,
+    bunkerMix,
     text: (settings.outputSort === "player" ? formatPlayerCommands(allCommands) : lines).join("\n"),
     summary: `${commandCount} comandi, ${totalSentWeight} peso difesa assegnato${totalMissing ? `, ${totalMissing} mancante` : ""}.`,
     warnings
@@ -3579,7 +3589,7 @@ function calculate(){
     clearError();
     const plan = buildPlan();
     els.resultBox.value = plan.text;
-    els.summaryBox.textContent = plan.summary;
+    els.summaryBox.textContent = [plan.summary, ...plan.bunkerMix].join("\n");
     showWarnings(plan.warnings);
     mapCommands = plan.commands;
     mapPlanReady = true;
