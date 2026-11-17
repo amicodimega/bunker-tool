@@ -2920,30 +2920,37 @@ function effectiveWeight(weight){
   return weight;
 }
 
-function balancedGroupTargets(spear, sword, heavy, limit, share){
-  const low = 1 - share/100, high = share/100;
-  const other = sword + 4*heavy;
-  const maximum = Math.floor(Math.min(limit,spear+other,spear/low,other/low) + 1e-8);
-  for(let total=maximum; total>=Math.max(0,maximum-12); total--){
-    const minA = Math.max(0,Math.ceil(low*total-1e-8),total-other);
-    const maxA = Math.min(spear,Math.floor(high*total+1e-8));
-    const middle = Math.max(minA,Math.min(maxA,Math.round(total/2)));
-    for(const base of [middle,minA,maxA]) for(let delta=-4;delta<=4;delta++){
-      const a=base+delta, b=total-a;
-      if(a<minA || a>maxA) continue;
-      const h=Math.min(heavy,Math.floor(b/4)), s=b-4*h;
-      if(s>=0 && s<=sword) return {spear:a,other:b,heavy:h,sword:s};
-    }
-  }
-  return {spear:0,other:0,heavy:0,sword:0};
-}
-
 function createBalanceBudget(rows, target, share){
   const totals={spear:0,sword:0,heavy:0,archer:0};
-  for(const row of rows) for(const unit of Object.keys(totals)) totals[unit]+=row[unit] || 0;
-  const result=balancedGroupTargets(totals.spear,totals.sword,totals.heavy,target,share);
-  const hasBalancedBase = result.spear > 0 && result.other > 0;
-  return {...result,hasBalancedBase,archer:hasBalancedBase ? Math.min(totals.archer,Math.max(0,target-result.spear-result.other)) : 0};
+  const preferred={...totals};
+  let remaining=target;
+  for(const row of rows){
+    for(const unit of Object.keys(totals)) totals[unit]+=row[unit] || 0;
+    if(remaining > 0){
+      const {send,sentWeight}=takeDefense({...row},remaining);
+      for(const unit of Object.keys(preferred)) preferred[unit]+=send[unit];
+      remaining-=sentWeight;
+    }
+  }
+  const percent=100-share;
+  const other=totals.sword+4*totals.heavy;
+  const maximum=Math.floor(Math.min(target,availableWeight(totals),100*totals.spear/percent,100*other/percent));
+  for(let weight=maximum;weight>0;weight--){
+    const minimum=Math.ceil(weight*percent/100-1e-8);
+    const lo=Math.max(minimum,weight-totals.spear-totals.archer);
+    const hi=Math.min(other,weight-minimum);
+    if(lo>hi) continue;
+    const desired=Math.max(lo,Math.min(hi,preferred.sword+4*preferred.heavy));
+    const below=Math.min(desired,4*Math.min(totals.heavy,Math.floor(desired/4))+totals.sword);
+    const above=4*Math.max(0,Math.ceil((desired-totals.sword)/4));
+    const candidates=[below,Math.max(desired,above)].filter(n=>n>=lo && n<=hi);
+    if(!candidates.length) continue;
+    const group=candidates.sort((a,b)=>Math.abs(a-desired)-Math.abs(b-desired))[0];
+    const heavy=Math.min(totals.heavy,Math.floor(group/4));
+    const spear=Math.max(minimum,weight-group-totals.archer,Math.min(preferred.spear,totals.spear,weight-group));
+    return {spear,sword:group-4*heavy,heavy,archer:weight-group-spear,hasBalancedBase:true};
+  }
+  return {spear:0,sword:0,heavy:0,archer:0,hasBalancedBase:false};
 }
 
 function takeBalancedDefense(source, eligible, budget){
@@ -2956,9 +2963,9 @@ function takeBalancedDefense(source, eligible, budget){
 }
 
 function enforceBunkerBalance(commands, sources, share, roundingStep){
-  const totals={spear:0,sword:0,heavy:0};
+  const totals={spear:0,sword:0,heavy:0,archer:0};
   for(const command of commands) for(const unit of Object.keys(totals)) totals[unit]+=command.send[unit];
-  const goal=balancedGroupTargets(totals.spear,totals.sword,totals.heavy,totals.spear+totals.sword+4*totals.heavy,share);
+  const goal=createBalanceBudget([totals],availableWeight(totals),share);
   for(const unit of Object.keys(totals)){
     let excess=totals[unit]-goal[unit];
     for(let i=commands.length-1;i>=0 && excess>0;i--){
@@ -3525,9 +3532,10 @@ function buildPlan(){
     if(balance){
       const spear = bunkerCommands.reduce((sum,c)=>sum+c.send.spear,0);
       const other = bunkerCommands.reduce((sum,c)=>sum+c.send.sword+4*c.send.heavy,0);
-      const pct = n => (100*n/(spear+other)).toLocaleString("it-IT",{maximumFractionDigits:2});
+      const archers = bunkerCommands.reduce((sum,c)=>sum+c.send.archer,0);
+      const pct = n => (100*n/(spear+other+archers)).toLocaleString("it-IT",{maximumFractionDigits:2});
       bunkerMix.push(spear+other
-        ? `${bunker.coord}: lance ${pct(spear)}% · spade e pesanti ${pct(other)}%`
+        ? `${bunker.coord}: lance ${pct(spear)}% · spade e pesanti ${pct(other)}% · arcieri ${pct(archers)}%`
         : `${bunker.coord}: nessuna lancia, spada o pesante assegnata`);
     }
     totalSentWeight += sentHere;
