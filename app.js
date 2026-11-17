@@ -2942,7 +2942,8 @@ function createBalanceBudget(rows, target, share){
   const totals={spear:0,sword:0,heavy:0,archer:0};
   for(const row of rows) for(const unit of Object.keys(totals)) totals[unit]+=row[unit] || 0;
   const result=balancedGroupTargets(totals.spear,totals.sword,totals.heavy,target,share);
-  return {...result,archer:Math.min(totals.archer,Math.max(0,target-result.spear-result.other))};
+  const hasBalancedBase = result.spear > 0 && result.other > 0;
+  return {...result,hasBalancedBase,archer:hasBalancedBase ? Math.min(totals.archer,Math.max(0,target-result.spear-result.other)) : 0};
 }
 
 function takeBalancedDefense(source, eligible, budget){
@@ -3542,7 +3543,8 @@ function buildPlan(){
     lines.push(`Totale inviato a ${bunker.coord}: ${sentHere}`);
     if(remaining > 0){
       totalMissing += remaining;
-      const warning = `Bunker ${bunker.coord} non completato. Mancano ${remaining}.`;
+      const warning = `Bunker ${bunker.coord} non completato. Mancano ${remaining}.` +
+        (balance && !budget.hasBalancedBase ? " Nessuna combinazione di lance e spade o pesanti rispetta il bilanciamento." : "");
       warnings.push(warning);
       lines.push(`[color=#b42318]${warning}[/color]`);
     }else{
